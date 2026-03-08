@@ -71,39 +71,22 @@ class HomeViewModel @Inject constructor(
         }
 
         distractionMonitor.start(viewModelScope)
-
-        sensorJob = viewModelScope.launch {
-            distractionMonitor.events.collect { event ->
-                _uiState.update {
-                    it.copy(
-                        distractionCount = it.distractionCount + 1,
-                        lastDistractionEvent = event,
-                    )
-                }
-            }
-        }
-
-        notificationJob = viewModelScope.launch {
-            var lastNotifiedAt = 0L
-            distractionMonitor.events.collect { event ->
-                val now = System.currentTimeMillis()
-                if (now - lastNotifiedAt >= 2_000L) {
-                    lastNotifiedAt = now
-                    focusNotificationManager.notifyDistraction(event)
-                }
-            }
-        }
-
+        startMonitoringJobs()
         startTimer()
     }
 
     fun onPauseClicked() {
         timerJob?.cancel()
+        sensorJob?.cancel()
+        notificationJob?.cancel()
+        distractionMonitor.stop()
         _uiState.update { it.copy(status = SessionStatus.Paused) }
     }
 
     fun onResumeClicked() {
         _uiState.update { it.copy(status = SessionStatus.Running) }
+        distractionMonitor.start(viewModelScope)
+        startMonitoringJobs()
         startTimer()
     }
 
@@ -132,6 +115,30 @@ class HomeViewModel @Inject constructor(
                 distractionCount = 0,
                 lastDistractionEvent = null,
             )
+        }
+    }
+
+    private fun startMonitoringJobs() {
+        sensorJob = viewModelScope.launch {
+            distractionMonitor.events.collect { event ->
+                _uiState.update {
+                    it.copy(
+                        distractionCount = it.distractionCount + 1,
+                        lastDistractionEvent = event,
+                    )
+                }
+            }
+        }
+
+        notificationJob = viewModelScope.launch {
+            var lastNotifiedAt = 0L
+            distractionMonitor.events.collect { event ->
+                val now = System.currentTimeMillis()
+                if (now - lastNotifiedAt >= 2_000L) {
+                    lastNotifiedAt = now
+                    focusNotificationManager.notifyDistraction(event)
+                }
+            }
         }
     }
 
