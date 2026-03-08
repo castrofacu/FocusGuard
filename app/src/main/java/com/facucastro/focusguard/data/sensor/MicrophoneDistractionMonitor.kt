@@ -42,6 +42,7 @@ class MicrophoneDistractionMonitor @Inject constructor(
             } catch (e: Exception) {
                 it.release()
                 recorder = null
+                tempOutputFile.delete()
                 Log.e(TAG, "Failed to start microphone monitoring", e)
                 return
             }
