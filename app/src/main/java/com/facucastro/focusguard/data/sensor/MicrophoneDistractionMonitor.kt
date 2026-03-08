@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 import kotlin.math.log10
 
@@ -51,9 +52,9 @@ class MicrophoneDistractionMonitor @Inject constructor(
                 delay(POLL_INTERVAL_MS)
                 val amplitude = recorder?.maxAmplitude ?: break
                 if (amplitude > 0) {
-                    // Convert raw 16-bit PCM amplitude to dBFS.
-                    // 32767 = Int16.MAX_VALUE (full scale). Result is 0dB at max amplitude.
-                    val decibels = 20 * log10(amplitude / 32767.0)
+                    // Convert raw 16-bit PCM amplitude to approximate dB SPL.
+                    // Yields ~0 dB at amplitude 1 and ~90 dB at full scale (32767).
+                    val decibels = 20 * log10(amplitude.toDouble())
                     if (decibels >= NOISE_THRESHOLD_DB) {
                         _events.emit(DistractionEvent.Noise)
                     }
@@ -72,19 +73,23 @@ class MicrophoneDistractionMonitor @Inject constructor(
             release()
         }
         recorder = null
+        tempOutputFile.delete()
         Log.i(TAG, "Stopped microphone monitoring")
     }
+
+    private val tempOutputFile = File(context.cacheDir, "mic_monitor_tmp.3gp")
 
     private fun createRecorder(): MediaRecorder {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(context)
         } else {
+            @Suppress("DEPRECATION")
             MediaRecorder()
         }.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-            setOutputFile("/dev/null")
+            setOutputFile(tempOutputFile.absolutePath)
         }
     }
 }
