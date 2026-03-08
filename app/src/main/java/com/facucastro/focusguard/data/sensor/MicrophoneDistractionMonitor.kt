@@ -33,19 +33,19 @@ class MicrophoneDistractionMonitor @Inject constructor(
     private var pollingJob: Job? = null
 
     override fun start(scope: CoroutineScope) {
-        // If prepare/start fails (e.g. RECORD_AUDIO permission denied), the monitor simply
+        // If recorder setup fails (e.g. RECORD_AUDIO permission denied), the monitor simply
         // produces no events rather than crashing.
-        recorder = createRecorder().also {
-            try {
+        try {
+            recorder = createRecorder().also {
                 it.prepare()
                 it.start()
-            } catch (e: Exception) {
-                it.release()
-                recorder = null
-                tempOutputFile.delete()
-                Log.e(TAG, "Failed to start microphone monitoring", e)
-                return
             }
+        } catch (e: Exception) {
+            recorder?.release()
+            recorder = null
+            tempOutputFile.delete()
+            Log.e(TAG, "Failed to start microphone monitoring", e)
+            return
         }
 
         pollingJob = scope.launch {
