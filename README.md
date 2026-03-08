@@ -66,9 +66,13 @@ The accelerometer registers at `SENSOR_DELAY_NORMAL` rather than `SENSOR_DELAY_F
 
 **What still needs to change:** right now the two monitors are injected as individual constructor parameters (`AccelerometerDistractionMonitor`, `MicrophoneDistractionMonitor`), not as a `List<DistractionMonitor>`. To make the composite truly open for extension without modification, the constructor should accept a `List<DistractionMonitor>`.
 
-### Notifications: debounce strategy
+### Notifications: throttle strategy
 
-The current implementation does not debounce distraction events — every 500 ms microphone poll that crosses 70 dB or every accelerometer delta above 2.5 increments the counter. The plan is to wrap the event flow with `debounce(2000L)` before incrementing the counter, so that a continuous noise burst counts as one distraction rather than flooding the state. This was intentionally left out as a simplification; the counter logic is entirely in the ViewModel and the debounce operator can be inserted in one line.
+`FocusNotificationManager` owns the notification channel (`focus_distraction_channel`) and posts a `NotificationCompat` alert whenever `notifyDistraction(event)` is called. The channel is created once in `FocusGuardApp.onCreate()`, which runs before any Activity or ViewModel is initialized.
+
+In `HomeViewModel`, two separate coroutines collect from `distractionMonitor.events`:
+- `sensorJob` — counts every event and updates `HomeUiState`, unthrottled.
+- `notificationJob` — posts a notification on the first event, then suppresses further notifications for 2 seconds (`throttleFirst` pattern via a `lastNotifiedAt` timestamp). This prevents alert flooding when noise or motion is continuous, while still informing the user promptly on the first detection.
 
 ### Accessibility
 
@@ -81,7 +85,6 @@ Every interactive element has a `contentDescription`. `SessionControls` adds `se
 - **History screen** — `HistoryScreen` is a placeholder. The full data pipeline exists (`FocusRepository.getHistory()` returns a `Flow<List<FocusSession>>`), but no `HistoryViewModel` or list UI was wired up.
 - **Error handling** — network failures are silently swallowed. There is no retry logic, no user-facing error state, and no offline queue.
 - **Tests** — MockK and `kotlinx-coroutines-test` are in the build graph; the test files are stubs. The architecture was designed with testing in mind (pure domain interfaces, injectable fakes), but no actual test cases were written.
-- **Notification posting** — the permission is requested and the infrastructure is referenced, but no notification is ever posted.
 
 ---
 
@@ -89,11 +92,9 @@ Every interactive element has a `contentDescription`. `SessionControls` adds `se
 
 1. **ForegroundService** — move sensor collection and the timer into a bound `ForegroundService` with a persistent notification so sessions survive backgrounding. The ViewModel binds to the service and continues to observe state via a shared `StateFlow`.
 2. **History screen** — `HistoryViewModel` collecting from `FocusRepository.getHistory()`, displayed in a `LazyColumn` with session duration, timestamp, and distraction count.
-3. **Debounce** — add `debounce(2000L)` to the event flow inside the ViewModel before incrementing the counter and triggering notifications.
-4. **Room migration** — replace DataStore + Gson with Room for proper querying, indexes, and multi-table support (e.g., storing individual `DistractionEvent` rows per session).
-5. **Real API integration** — swap `FakeFocusApiServiceImpl` for `RetrofitFocusApiServiceImpl` in `AppModule`, add error-state handling in the repository, and implement a retry / offline queue.
-6. **Unit tests** — `HomeViewModelTest` using `TestCoroutineScheduler` + `FakeDistractionMonitor` + `FakeFocusRepository`; use-case tests with fakes; DataStore tests with an in-memory `PreferenceDataStore`.
-7. **Distraction notification** — post a `NotificationCompat` alert when a distraction is detected (with the debounce in place), leveraging the already-declared `POST_NOTIFICATIONS` permission.
+3. **Room migration** — replace DataStore + Gson with Room for proper querying, indexes, and multi-table support (e.g., storing individual `DistractionEvent` rows per session).
+4. **Real API integration** — swap `FakeFocusApiServiceImpl` for `RetrofitFocusApiServiceImpl` in `AppModule`, add error-state handling in the repository, and implement a retry / offline queue.
+5. **Unit tests** — `HomeViewModelTest` using `TestCoroutineScheduler` + `FakeDistractionMonitor` + `FakeFocusRepository`; use-case tests with fakes; DataStore tests with an in-memory `PreferenceDataStore`.
 
 ---
 

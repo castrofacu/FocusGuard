@@ -7,6 +7,7 @@ import com.facucastro.focusguard.domain.model.SessionStatus
 import com.facucastro.focusguard.domain.sensor.DistractionMonitor
 import com.facucastro.focusguard.domain.usecase.StartFocusSessionUseCase
 import com.facucastro.focusguard.domain.usecase.StopFocusSessionUseCase
+import com.facucastro.focusguard.notification.FocusNotificationManager
 import com.facucastro.focusguard.presentation.home.state.HomeEvent
 import com.facucastro.focusguard.presentation.home.state.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +29,7 @@ class HomeViewModel @Inject constructor(
     private val distractionMonitor: DistractionMonitor,
     private val startFocusSessionUseCase: StartFocusSessionUseCase,
     private val stopFocusSessionUseCase: StopFocusSessionUseCase,
+    private val focusNotificationManager: FocusNotificationManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -39,6 +41,7 @@ class HomeViewModel @Inject constructor(
     private var activeSession: FocusSession? = null
     private var timerJob: Job? = null
     private var sensorJob: Job? = null
+    private var notificationJob: Job? = null
 
     fun onStartClicked() {
         if (_uiState.value.status != SessionStatus.Idle) return
@@ -80,6 +83,17 @@ class HomeViewModel @Inject constructor(
             }
         }
 
+        notificationJob = viewModelScope.launch {
+            var lastNotifiedAt = 0L
+            distractionMonitor.events.collect { event ->
+                val now = System.currentTimeMillis()
+                if (now - lastNotifiedAt >= 2_000L) {
+                    lastNotifiedAt = now
+                    focusNotificationManager.notifyDistraction(event)
+                }
+            }
+        }
+
         startTimer()
     }
 
@@ -96,6 +110,7 @@ class HomeViewModel @Inject constructor(
     fun onStopClicked() {
         timerJob?.cancel()
         sensorJob?.cancel()
+        notificationJob?.cancel()
         distractionMonitor.stop()
 
         val session = activeSession
