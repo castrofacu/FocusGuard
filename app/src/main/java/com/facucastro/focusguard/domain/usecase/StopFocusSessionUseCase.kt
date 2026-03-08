@@ -7,12 +7,12 @@ import javax.inject.Inject
 class StopFocusSessionUseCase @Inject constructor(
     private val repository: FocusRepository
 ) {
-    suspend operator fun invoke(session: FocusSession, distractionCount: Int) {
+    suspend operator fun invoke(session: FocusSession, distractionCount: Int): Result<Unit> {
         val durationSeconds = ((System.currentTimeMillis() - session.startTime) / 1000).toInt()
         val completed = session.copy(
             durationSeconds = durationSeconds,
             distractionCount = distractionCount
         )
-        repository.saveSession(completed)
+        return repository.saveSession(completed)
     }
 }

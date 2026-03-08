@@ -116,7 +116,12 @@ class HomeViewModel @Inject constructor(
         val session = activeSession
         val count = _uiState.value.distractionCount
         if (session != null) {
-            viewModelScope.launch { stopFocusSessionUseCase(session, count) }
+            viewModelScope.launch {
+                stopFocusSessionUseCase(session, count)
+                    .onFailure {
+                        _events.send(HomeEvent.FailedToSyncSession)
+                    }
+            }
         }
 
         activeSession = null

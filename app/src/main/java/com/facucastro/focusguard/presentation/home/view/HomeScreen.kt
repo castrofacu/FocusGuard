@@ -46,9 +46,10 @@ fun HomeScreen(
                     }.toTypedArray()
                     permissionLauncher.launch(permissionsToRequest)
                 }
-                is HomeEvent.NotificationsPermissionDenied -> snackbarHostState.showSnackbar(
-                    "Notifications permission denied. Alerts will only be shown on screen."
-                )
+                HomeEvent.FailedToSyncSession ->
+                    snackbarHostState.showSnackbar("Failed to sync session")
+                HomeEvent.NotificationsPermissionDenied ->
+                    snackbarHostState.showSnackbar("Notifications permission denied")
             }
         }
     }

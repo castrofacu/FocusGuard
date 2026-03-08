@@ -15,9 +15,9 @@ class FocusRepositoryImpl @Inject constructor(
     private val apiService: FocusApiService
 ) : FocusRepository {
 
-    override suspend fun saveSession(session: FocusSession) {
+    override suspend fun saveSession(session: FocusSession): Result<Unit> {
         dataStore.addSession(session)
-        apiService.createSession(session.toDto())
+        return apiService.createSession(session.toDto()).map { }
     }
 
     override fun getHistory(): Flow<List<FocusSession>> = dataStore.getSessions()

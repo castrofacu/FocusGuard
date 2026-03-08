@@ -32,7 +32,7 @@ DataStore was chosen to minimise setup time. Sessions are serialised as a single
 
 ### API abstraction: FakeFocusApiServiceImpl
 
-`FakeFocusApiServiceImpl` is active because there was no time to build a real backend — it was the fastest way to keep the rest of the data flow working end-to-end. It implements the same `FocusApiService` interface as `RetrofitFocusApiServiceImpl`, so switching to a real server is a single-line `@Binds` change in `AppModule` with no impact on the ViewModel or repository. The repository always writes to local DataStore first and then fires the remote call; the remote `Result` is not propagated, so local state is never blocked on network availability.
+`FakeFocusApiServiceImpl` is active because there was no time to build a real backend — it was the fastest way to keep the rest of the data flow working end-to-end. It implements the same `FocusApiService` interface as `RetrofitFocusApiServiceImpl`, so switching to a real server is a single-line `@Binds` change in `AppModule` with no impact on the ViewModel or repository. The repository always writes to local DataStore first and then fires the remote call. `saveSession` returns `Result<Unit>`: on success the local write has already happened; on failure the session is still persisted locally and `HomeViewModel` receives the failure to notify the user.
 
 ### Navigation: manual state vs NavGraph
 
@@ -83,7 +83,7 @@ Every interactive element has a `contentDescription`. `SessionControls` adds `se
 ## What Was Intentionally Deprioritized
 
 - **History screen** — `HistoryScreen` is a placeholder. The full data pipeline exists (`FocusRepository.getHistory()` returns a `Flow<List<FocusSession>>`), but no `HistoryViewModel` or list UI was wired up.
-- **Error handling** — network failures are silently swallowed. There is no retry logic, no user-facing error state, and no offline queue.
+- **Error handling** — basic error handling is in place: network failures surface as a `ShowSnackbar` event to the user. There is no retry logic or offline queue. And there is not error types.
 - **Tests** — MockK and `kotlinx-coroutines-test` are in the build graph; the test files are stubs. The architecture was designed with testing in mind (pure domain interfaces, injectable fakes), but no actual test cases were written.
 
 ---
@@ -93,7 +93,7 @@ Every interactive element has a `contentDescription`. `SessionControls` adds `se
 1. **ForegroundService** — move sensor collection and the timer into a bound `ForegroundService` with a persistent notification so sessions survive backgrounding. The ViewModel binds to the service and continues to observe state via a shared `StateFlow`.
 2. **History screen** — `HistoryViewModel` collecting from `FocusRepository.getHistory()`, displayed in a `LazyColumn` with session duration, timestamp, and distraction count.
 3. **Room migration** — replace DataStore + Gson with Room for proper querying, indexes, and multi-table support (e.g., storing individual `DistractionEvent` rows per session).
-4. **Real API integration** — swap `FakeFocusApiServiceImpl` for `RetrofitFocusApiServiceImpl` in `AppModule`, add error-state handling in the repository, and implement a retry / offline queue.
+4. **Real API integration** — swap `FakeFocusApiServiceImpl` for `RetrofitFocusApiServiceImpl` in `AppModule` and implement a retry / offline queue. The `Result<Unit>` is basic, add error types in the future.
 5. **Unit tests** — `HomeViewModelTest` using `TestCoroutineScheduler` + `FakeDistractionMonitor` + `FakeFocusRepository`; use-case tests with fakes; DataStore tests with an in-memory `PreferenceDataStore`.
 
 ---
