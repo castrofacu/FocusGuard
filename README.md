@@ -43,6 +43,12 @@ notification/ — FocusNotificationManager
 
 <!-- TODO: fill in -->
 
+
+
+CompositeDistractionMonitor -> add a list of distraction monitors
+
+SENSOR_DELAY_NORMAL -> For not drain battery
+
 ## Permissions
 
 | Permission | Reason |

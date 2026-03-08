@@ -1,0 +1,90 @@
+package com.facucastro.focusguard.data.sensor
+
+import android.content.Context
+import android.media.MediaRecorder
+import android.os.Build
+import android.util.Log
+import com.facucastro.focusguard.domain.model.DistractionEvent
+import com.facucastro.focusguard.domain.sensor.DistractionMonitor
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.math.log10
+
+private const val NOISE_THRESHOLD_DB = 70.0
+private const val POLL_INTERVAL_MS = 500L
+private const val TAG = "MicrophoneDistractionMonitor"
+
+class MicrophoneDistractionMonitor @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) : DistractionMonitor {
+
+    private val _events = MutableSharedFlow<DistractionEvent>()
+    override val events: SharedFlow<DistractionEvent> = _events
+
+    private var recorder: MediaRecorder? = null
+    private var pollingJob: Job? = null
+
+    override fun start(scope: CoroutineScope) {
+        // If prepare/start fails (e.g. RECORD_AUDIO permission denied), the monitor simply
+        // produces no events rather than crashing.
+        recorder = createRecorder().also {
+            try {
+                it.prepare()
+                it.start()
+            } catch (e: Exception) {
+                it.release()
+                recorder = null
+                Log.e(TAG, "Failed to start microphone monitoring", e)
+                return
+            }
+        }
+
+        pollingJob = scope.launch {
+            while (isActive) {
+                delay(POLL_INTERVAL_MS)
+                val amplitude = recorder?.maxAmplitude ?: break
+                if (amplitude > 0) {
+                    // Convert raw 16-bit PCM amplitude to dBFS.
+                    // 32767 = Int16.MAX_VALUE (full scale). Result is 0dB at max amplitude.
+                    val decibels = 20 * log10(amplitude / 32767.0)
+                    if (decibels >= NOISE_THRESHOLD_DB) {
+                        _events.emit(DistractionEvent.Noise)
+                    }
+                }
+            }
+        }
+
+        Log.i(TAG, "Started microphone monitoring")
+    }
+
+    override fun stop() {
+        pollingJob?.cancel()
+        pollingJob = null
+        recorder?.runCatching {
+            stop()
+            release()
+        }
+        recorder = null
+        Log.i(TAG, "Stopped microphone monitoring")
+    }
+
+    private fun createRecorder(): MediaRecorder {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(context)
+        } else {
+            MediaRecorder()
+        }.apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            setOutputFile("/dev/null")
+        }
+    }
+}
