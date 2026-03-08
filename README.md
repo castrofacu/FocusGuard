@@ -49,6 +49,10 @@ CompositeDistractionMonitor -> add a list of distraction monitors
 
 SENSOR_DELAY_NORMAL -> For not drain battery
 
+Guardo la data de la session en los 2 pero nunca hago get de la api
+
+Data store para ahorrrar tiempo
+
 ## Permissions
 
 | Permission | Reason |

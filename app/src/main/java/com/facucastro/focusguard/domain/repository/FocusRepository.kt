@@ -4,8 +4,6 @@ import com.facucastro.focusguard.domain.model.FocusSession
 import kotlinx.coroutines.flow.Flow
 
 interface FocusRepository {
-    suspend fun startSession(): FocusSession
-    suspend fun stopSession(id: Long, distractionCount: Int)
+    suspend fun saveSession(session: FocusSession)
     fun getHistory(): Flow<List<FocusSession>>
-    suspend fun getSessionById(id: Long): FocusSession?
 }

@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.datastore.preferences)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
