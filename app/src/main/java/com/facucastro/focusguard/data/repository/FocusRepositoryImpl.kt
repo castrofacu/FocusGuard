@@ -16,8 +16,14 @@ class FocusRepositoryImpl @Inject constructor(
 ) : FocusRepository {
 
     override suspend fun saveSession(session: FocusSession): Result<Unit> {
-        dataStore.addSession(session)
-        return apiService.createSession(session.toDto()).map { }
+        return runCatching {
+            dataStore.addSession(session)
+        }.onSuccess {
+            apiService.createSession(session.toDto())
+                .onSuccess {
+                    dataStore.markAsSynced(session.id)
+                }
+        }
     }
 
     override fun getHistory(): Flow<List<FocusSession>> = dataStore.getSessions()
