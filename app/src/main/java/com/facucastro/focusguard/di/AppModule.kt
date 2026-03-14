@@ -1,7 +1,7 @@
 package com.facucastro.focusguard.di
 
 import com.facucastro.focusguard.data.local.LocalSessionDataSource
-import com.facucastro.focusguard.data.local.SessionDataStore
+import com.facucastro.focusguard.data.local.RoomSessionDataSource
 import com.facucastro.focusguard.data.remote.FakeFocusApiServiceImpl
 import com.facucastro.focusguard.data.remote.FocusApiService
 import com.facucastro.focusguard.data.repository.FocusRepositoryImpl
@@ -18,7 +18,7 @@ abstract class AppModule {
 
     @Binds
     @Singleton
-    abstract fun bindLocalSessionDataSource(impl: SessionDataStore): LocalSessionDataSource
+    abstract fun bindLocalSessionDataSource(impl: RoomSessionDataSource): LocalSessionDataSource
 
     @Binds
     @Singleton

@@ -13,6 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+// Small wrapper around WorkManager so scheduling policy stays in one place.
 class SyncWorkScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
@@ -21,6 +22,7 @@ class SyncWorkScheduler @Inject constructor(
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
+        // A single unique request avoids stacking duplicate sync jobs after multiple saves.
         val request = OneTimeWorkRequestBuilder<SyncSessionsWorker>()
             .setConstraints(constraints)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
