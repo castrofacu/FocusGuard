@@ -102,7 +102,7 @@ class HomeViewModel @Inject constructor(
             viewModelScope.launch {
                 stopFocusSessionUseCase(session, count)
                     .onFailure {
-                        _events.send(HomeEvent.FailedToSyncSession)
+                        _events.send(HomeEvent.FailedToSaveSession)
                     }
             }
         }
