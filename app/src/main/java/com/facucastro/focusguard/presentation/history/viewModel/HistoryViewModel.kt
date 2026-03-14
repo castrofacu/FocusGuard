@@ -8,10 +8,10 @@ import com.facucastro.focusguard.domain.usecase.GetHistoryUseCase
 import com.facucastro.focusguard.presentation.history.state.HistoryUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import javax.inject.Inject
@@ -22,19 +22,17 @@ class HistoryViewModel @Inject constructor(
     private val timeProvider: TimeProvider
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HistoryUiState())
-    val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            getHistoryUseCase().collect { sessions ->
-                val newState = withContext(Dispatchers.Default) {
-                    computeUiState(sessions)
-                }
-                _uiState.value = newState
+    val uiState: StateFlow<HistoryUiState> = getHistoryUseCase()
+        .map { sessions ->
+            withContext(Dispatchers.Default) {
+                computeUiState(sessions)
             }
         }
-    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HistoryUiState(isLoading = true)
+        )
 
     private fun computeUiState(sessions: List<FocusSession>): HistoryUiState {
         val zone = timeProvider.getZoneId()
