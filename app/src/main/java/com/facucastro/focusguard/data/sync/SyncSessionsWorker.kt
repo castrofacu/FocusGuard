@@ -19,18 +19,26 @@ class SyncSessionsWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        val pendingSessions = dataSource.getPendingSessions()
+        val pendingSessions = try {
+            dataSource.getPendingSessions()
+        } catch (_: Exception) {
+            return Result.retry()
+        }
 
         var anyFailed = false
 
         pendingSessions.forEach { session ->
-            apiService.createSession(session.toDto())
-                .onSuccess {
-                    dataSource.markAsSynced(session.id)
-                }
-                .onFailure {
-                    anyFailed = true
-                }
+            try {
+                apiService.createSession(session.toDto())
+                    .onSuccess {
+                        dataSource.markAsSynced(session.id)
+                    }
+                    .onFailure {
+                        anyFailed = true
+                    }
+            } catch (_: Exception) {
+                anyFailed = true
+            }
         }
 
         return if (anyFailed) Result.retry() else Result.success()
