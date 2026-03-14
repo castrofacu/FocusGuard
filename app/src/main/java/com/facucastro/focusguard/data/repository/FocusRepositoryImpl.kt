@@ -10,17 +10,17 @@ import javax.inject.Singleton
 
 @Singleton
 class FocusRepositoryImpl @Inject constructor(
-    private val dataStore: LocalSessionDataSource,
+    private val localDataSource: LocalSessionDataSource,
     private val syncWorkScheduler: SyncWorkScheduler
 ) : FocusRepository {
 
     override suspend fun saveSession(session: FocusSession): Result<Unit> {
         return runCatching {
-            dataStore.addSession(session)
+            localDataSource.addSession(session)
         }.onSuccess {
             syncWorkScheduler.enqueueSync()
         }
     }
 
-    override fun getHistory(): Flow<List<FocusSession>> = dataStore.getSessions()
+    override fun getHistory(): Flow<List<FocusSession>> = localDataSource.getSessions()
 }
