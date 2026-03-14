@@ -6,4 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface LocalSessionDataSource {
     fun getSessions(): Flow<List<FocusSession>>
     suspend fun addSession(session: FocusSession)
+    suspend fun getPendingSessions(): List<FocusSession>
+    suspend fun markAsSynced(id: Long)
 }

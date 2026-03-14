@@ -46,8 +46,8 @@ fun HomeScreen(
                     }.toTypedArray()
                     permissionLauncher.launch(permissionsToRequest)
                 }
-                HomeEvent.FailedToSyncSession ->
-                    snackbarHostState.showSnackbar("Failed to sync session")
+                HomeEvent.FailedToSaveSession ->
+                    snackbarHostState.showSnackbar("Failed to save session")
                 HomeEvent.NotificationsPermissionDenied ->
                     snackbarHostState.showSnackbar("Notifications permission denied")
             }
