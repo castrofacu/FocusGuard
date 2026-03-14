@@ -3,6 +3,7 @@ package com.facucastro.focusguard.data.repository
 import com.facucastro.focusguard.data.local.LocalSessionDataSource
 import com.facucastro.focusguard.data.remote.FocusApiService
 import com.facucastro.focusguard.data.remote.dto.toDto
+import com.facucastro.focusguard.data.sync.SyncWorkScheduler
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.repository.FocusRepository
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +13,8 @@ import javax.inject.Singleton
 @Singleton
 class FocusRepositoryImpl @Inject constructor(
     private val dataStore: LocalSessionDataSource,
-    private val apiService: FocusApiService
+    private val apiService: FocusApiService,
+    private val syncWorkScheduler: SyncWorkScheduler
 ) : FocusRepository {
 
     override suspend fun saveSession(session: FocusSession): Result<Unit> {
@@ -23,6 +25,8 @@ class FocusRepositoryImpl @Inject constructor(
                 .onSuccess {
                     dataStore.markAsSynced(session.id)
                 }
+
+            syncWorkScheduler.enqueueSync()
         }
     }
 
