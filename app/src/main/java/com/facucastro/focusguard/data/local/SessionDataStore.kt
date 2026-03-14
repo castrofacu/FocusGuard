@@ -47,4 +47,10 @@ class SessionDataStore @Inject constructor(
         current.add(session)
         writeSessions(current)
     }
+
+    // These methods are temporary no-ops while Room replaces this implementation.
+    override suspend fun getPendingSessions(): List<FocusSession> = emptyList()
+
+    // No-op for the same reason: DataStore does not track an isSynced flag per session.
+    override suspend fun markAsSynced(id: Long) = Unit
 }
