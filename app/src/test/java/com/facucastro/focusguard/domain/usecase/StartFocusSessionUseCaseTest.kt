@@ -1,6 +1,6 @@
 package com.facucastro.focusguard.domain.usecase
 
-import com.facucastro.focusguard.doubles.TestDoubles.FakeTimeProvider
+import com.facucastro.focusguard.domain.time.FakeTimeProvider
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

@@ -2,8 +2,8 @@ package com.facucastro.focusguard.domain.usecase
 
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.repository.FocusRepository
-import com.facucastro.focusguard.doubles.TestDoubles
-import com.facucastro.focusguard.doubles.TestDoubles.FakeTimeProvider
+import com.facucastro.focusguard.domain.repository.mockFocusRepository
+import com.facucastro.focusguard.domain.time.FakeTimeProvider
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -19,7 +19,7 @@ class StopFocusSessionUseCaseTest {
         val startTime = 1672531200000L
         val laterTime = startTime + 5000L // 5 seconds later
         val fakeTimeProvider = FakeTimeProvider(timeToReturn = laterTime)
-        val repository = TestDoubles.repositoryMock()
+        val repository = mockFocusRepository()
         val useCase = StopFocusSessionUseCase(repository, fakeTimeProvider)
         val session = FocusSession(id = startTime, startTime = startTime, durationSeconds = 0, distractionCount = 0)
 
@@ -50,7 +50,7 @@ class StopFocusSessionUseCaseTest {
         // GIVEN
         val fakeTimeProvider = FakeTimeProvider(timeToReturn = 2000L)
         val expectedError = RuntimeException("DB Error")
-        val repository = TestDoubles.FakeFocusRepository(result = Result.failure(expectedError))
+        val repository = mockFocusRepository(saveResult = Result.failure(expectedError))
         val useCase = StopFocusSessionUseCase(repository, fakeTimeProvider)
         val session = FocusSession(id = 1000L, startTime = 1000L, durationSeconds = 0, distractionCount = 0)
 
