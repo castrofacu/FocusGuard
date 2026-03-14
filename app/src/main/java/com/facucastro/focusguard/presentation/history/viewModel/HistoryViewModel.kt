@@ -7,27 +7,21 @@ import com.facucastro.focusguard.domain.time.TimeProvider
 import com.facucastro.focusguard.domain.usecase.GetHistoryUseCase
 import com.facucastro.focusguard.presentation.history.state.HistoryUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.withContext
 import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val getHistoryUseCase: GetHistoryUseCase,
+    getHistoryUseCase: GetHistoryUseCase,
     private val timeProvider: TimeProvider
 ) : ViewModel() {
 
     val uiState: StateFlow<HistoryUiState> = getHistoryUseCase()
-        .map { sessions ->
-            withContext(Dispatchers.Default) {
-                computeUiState(sessions)
-            }
-        }
+        .map { sessions -> computeUiState(sessions) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
