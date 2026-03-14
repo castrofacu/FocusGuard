@@ -5,7 +5,7 @@ Context-aware focus mode app for Android. Detects distractions (motion/noise), t
 # Architecture
 **Clean Architecture + MVVM** using Jetpack Compose, Hilt, and Coroutines/Flow.
 - **Domain:** Pure Kotlin. Use cases depend on interfaces (`DistractionMonitor`, `FocusRepository`).
-- **Data:** Platform implementations (`SensorManager`, `MediaRecorder`, `DataStore`, Retrofit).
+- **Data:** Platform implementations (`SensorManager`, `MediaRecorder`, Room, Retrofit, WorkManager sync).
 - **Presentation:** Jetpack Compose UI reacting to `StateFlow` (UI state) and `Channel` (one-shot side effects like Snackbars).
 
 
@@ -20,7 +20,7 @@ Context-aware focus mode app for Android. Detects distractions (motion/noise), t
 - **No Android Dependencies in Logic:** The Domain and ViewModels can be tested purely on the JVM using fakes (e.g., `FakeDistractionMonitor`, `FakeFocusRepository`).
 
 # Trade-offs Made
-- **DataStore vs Room:** Chose DataStore with Gson for rapid MVP persistence. Trade-off: Slower for large datasets, but faster to implement than Room.
+- **Offline-first Room storage:** Sessions are saved to Room first and synced to the API in the background. Trade-off: More moving parts than direct API writes, but resilient to flaky connectivity.
 - **viewModelScope vs ForegroundService:** Sensor monitoring runs in the ViewModel. Trade-off: The OS will kill the session if the app is backgrounded for too long.
 - **Fake API:** Used a fake repository implementation (`FakeFocusApiServiceImpl`) to simulate network calls without blocking the UI flow.
 - **Manual State vs NavGraph:** Navigation relies on a simple enum state (remember { mutableStateOf(Tab) }) instead of Jetpack Navigation. Trade-off: Perfectly adequate and removes boilerplate for a simple 2-screen MVP, but lacks deep-linking and back-stack management which would be needed as the app grows.
@@ -28,14 +28,13 @@ Context-aware focus mode app for Android. Detects distractions (motion/noise), t
 
 # Intentionally Deprioritized
 - **History UI:** The data pipeline exists (`getHistory()`), but the Compose screen and ViewModel for the list were omitted.
-- **Complex Error Handling:** Basic error handling is implemented (catching exceptions and showing a Snackbar), but offline retry queues and complex syncing were left out.
 - **Unit Tests Implementation:** The architecture is fully decoupled for testing, but the actual test cases were not written due to time constraints.
 
 # Future Improvements & Scaling
 If given more time and preparing for a production environment, I would prioritize:
 
 - **Foreground Service:** Move sensor collection into a bound `ForegroundService` with a persistent notification to survive backgrounding.
-- **Room Migration:** Replace DataStore with a Room database for structured querying and pagination.
-- **Real API & WorkManager:** Swap the fake API for Retrofit and use `WorkManager` for guaranteed offline-to-online session syncing.
+- **Room Evolution:** Add indexes, migrations, data reconciliation, and richer history queries as session volume grows.
+- **Real API Integration:** Replace the fake API implementation currently bound in DI and keep WorkManager for guaranteed offline-to-online syncing.
 - **Debounce/Throttling Enhancements:** Move the distraction throttling logic further upstream into the domain layer.
 - **Write Tests:** Implement tests for ViewModels and Use Cases using `kotlinx-coroutines-test`.
