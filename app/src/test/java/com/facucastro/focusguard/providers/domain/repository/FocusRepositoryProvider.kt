@@ -1,12 +1,13 @@
-package com.facucastro.focusguard.domain.repository
+package com.facucastro.focusguard.providers.domain.repository
 
 import com.facucastro.focusguard.domain.model.FocusSession
+import com.facucastro.focusguard.domain.repository.FocusRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
-fun mockFocusRepository(
+fun providesMockFocusRepository(
     saveResult: Result<Unit> = Result.success(Unit),
     historyFlow: Flow<List<FocusSession>> = emptyFlow()
 ): FocusRepository {

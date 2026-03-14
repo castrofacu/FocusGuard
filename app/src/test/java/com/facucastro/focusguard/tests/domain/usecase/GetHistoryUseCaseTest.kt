@@ -1,7 +1,8 @@
-package com.facucastro.focusguard.domain.usecase
+package com.facucastro.focusguard.tests.domain.usecase
 
 import com.facucastro.focusguard.domain.model.FocusSession
-import com.facucastro.focusguard.domain.repository.mockFocusRepository
+import com.facucastro.focusguard.providers.domain.repository.providesMockFocusRepository
+import com.facucastro.focusguard.domain.usecase.GetHistoryUseCase
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -16,7 +17,7 @@ class GetHistoryUseCaseTest {
     fun `GIVEN repository with history WHEN invoke THEN returns repository flow`() = runTest {
         // GIVEN
         val session = FocusSession(id = 1L, startTime = 1L, durationSeconds = 60, distractionCount = 0)
-        val repository = mockFocusRepository(historyFlow = flowOf(listOf(session)))
+        val repository = providesMockFocusRepository(historyFlow = flowOf(listOf(session)))
         val useCase = GetHistoryUseCase(repository)
 
         // WHEN
@@ -30,7 +31,7 @@ class GetHistoryUseCaseTest {
     @Test
     fun `GIVEN empty repository WHEN invoke THEN returns empty list`() = runTest {
         // GIVEN
-        val repository = mockFocusRepository(historyFlow = flowOf(emptyList()))
+        val repository = providesMockFocusRepository(historyFlow = flowOf(emptyList()))
         val useCase = GetHistoryUseCase(repository)
 
         // WHEN
@@ -45,7 +46,7 @@ class GetHistoryUseCaseTest {
     fun `GIVEN repository throws exception WHEN invoke THEN exception is propagated`() = runTest {
         // GIVEN
         val exceptionFlow = flow<List<FocusSession>> { throw RuntimeException("Database error") }
-        val repository = mockFocusRepository(historyFlow = exceptionFlow)
+        val repository = providesMockFocusRepository(historyFlow = exceptionFlow)
         val useCase = GetHistoryUseCase(repository)
 
         // WHEN // THEN

@@ -1,6 +1,7 @@
-package com.facucastro.focusguard.domain.usecase
+package com.facucastro.focusguard.tests.domain.usecase
 
-import com.facucastro.focusguard.domain.time.FakeTimeProvider
+import com.facucastro.focusguard.domain.usecase.StartFocusSessionUseCase
+import com.facucastro.focusguard.providers.domain.time.providesFakeTimeProvider
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -10,7 +11,7 @@ class StartFocusSessionUseCaseTest {
     fun `GIVEN valid time when invoke THEN returns focus session with correct timestamps`() {
         // GIVEN
         val fixedTime = 1672531200000L
-        val fakeTimeProvider = FakeTimeProvider(timeToReturn = fixedTime)
+        val fakeTimeProvider = providesFakeTimeProvider(timeToReturn = fixedTime)
         val useCase = StartFocusSessionUseCase(fakeTimeProvider)
 
         // WHEN
@@ -26,7 +27,7 @@ class StartFocusSessionUseCaseTest {
     @Test(expected = RuntimeException::class)
     fun `GIVEN time provider throws when invoke THEN propagates exception`() {
         // GIVEN
-        val fakeTimeProvider = FakeTimeProvider(shouldThrow = true)
+        val fakeTimeProvider = providesFakeTimeProvider(shouldThrow = true)
         val useCase = StartFocusSessionUseCase(fakeTimeProvider)
 
         // WHEN / THEN (exception expected)
