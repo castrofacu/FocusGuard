@@ -16,7 +16,7 @@ const val OLDER_MILLIS = TODAY_MILLIS - 3 * 24 * 3_600_000L     // 2024-04-07 12
 
 fun providesHistoryViewModel(
     historyFlow: Flow<List<FocusSession>> = emptyFlow(),
-    fakeTimeProvider: TimeProvider = providesFakeTimeProvider()
+    fakeTimeProvider: TimeProvider = providesFakeTimeProvider(timeToReturn = TODAY_MILLIS)
 ): HistoryViewModel {
     val repository = providesMockFocusRepository(historyFlow = historyFlow)
     val getHistoryUseCase = GetHistoryUseCase(repository)
