@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.utlis
+package com.facucastro.focusguard.utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

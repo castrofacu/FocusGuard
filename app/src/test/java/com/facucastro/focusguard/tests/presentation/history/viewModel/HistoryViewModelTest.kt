@@ -7,7 +7,7 @@ import com.facucastro.focusguard.providers.presentation.history.viewModel.TODAY_
 import com.facucastro.focusguard.providers.presentation.history.viewModel.YESTERDAY_MILLIS
 import com.facucastro.focusguard.providers.presentation.history.viewModel.providesHistoryViewModel
 import com.facucastro.focusguard.providers.domain.model.providesFocusSession
-import com.facucastro.focusguard.utlis.MainDispatcherRule
+import com.facucastro.focusguard.utils.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf

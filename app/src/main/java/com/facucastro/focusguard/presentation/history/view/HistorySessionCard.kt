@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.facucastro.focusguard.domain.model.FocusSession
 import java.time.Instant
@@ -86,11 +88,13 @@ fun HistorySessionCard(
                 ) {
                     SessionStatInfo(
                         icon = Icons.Filled.Timer,
-                        value = durationLabel
+                        value = durationLabel,
+                        label = "Duration"
                     )
                     SessionStatInfo(
                         icon = Icons.Filled.Warning,
-                        value = "${session.distractionCount}"
+                        value = "${session.distractionCount}",
+                        label = "Distractions"
                     )
                 }
             }
@@ -101,9 +105,13 @@ fun HistorySessionCard(
 @Composable
 private fun SessionStatInfo(
     icon: ImageVector,
-    value: String
+    value: String,
+    label: String
 ) {
     Row(
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            this.contentDescription = "$label: $value"
+        },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
