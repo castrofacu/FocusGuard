@@ -71,6 +71,7 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
                     ) { session ->
                         HistorySessionCard(
                             session = session,
+                            zoneId = uiState.zoneId,
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }

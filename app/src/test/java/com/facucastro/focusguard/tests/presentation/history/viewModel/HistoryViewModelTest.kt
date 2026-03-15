@@ -20,6 +20,7 @@ import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
@@ -34,7 +35,10 @@ class HistoryViewModelTest {
             val viewModel = providesHistoryViewModel(historyFlow = emptyFlow())
 
             // THEN
-            Assert.assertEquals(HistoryUiState(isLoading = true), viewModel.uiState.value)
+            Assert.assertEquals(
+                HistoryUiState(isLoading = true, zoneId = ZoneId.of("UTC")),
+                viewModel.uiState.value
+            )
         }
 
     @Test

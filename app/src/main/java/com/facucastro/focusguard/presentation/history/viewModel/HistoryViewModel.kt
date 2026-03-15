@@ -25,7 +25,10 @@ class HistoryViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HistoryUiState(isLoading = true)
+            initialValue = HistoryUiState(
+                isLoading = true,
+                zoneId = timeProvider.getZoneId()
+            )
         )
 
     private fun computeUiState(sessions: List<FocusSession>): HistoryUiState {
@@ -61,7 +64,8 @@ class HistoryViewModel @Inject constructor(
             sessionGroups = groups,
             totalSessions = sessions.size,
             totalFocusMinutes = totalFocusMinutes,
-            avgDistractions = avgDistractions
+            avgDistractions = avgDistractions,
+            zoneId = zone
         )
     }
 }

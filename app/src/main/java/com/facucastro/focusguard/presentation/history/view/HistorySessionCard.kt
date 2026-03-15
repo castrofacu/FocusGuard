@@ -32,16 +32,20 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun HistorySessionCard(session: FocusSession, modifier: Modifier = Modifier) {
+fun HistorySessionCard(
+    session: FocusSession,
+    zoneId: ZoneId,
+    modifier: Modifier = Modifier
+) {
     val statusColor = when {
         session.distractionCount == 0 -> MaterialTheme.colorScheme.primary
         session.distractionCount <= 2 -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.error
     }
 
-    val timeLabel = remember(session.startTime) {
+    val timeLabel = remember(session.startTime, zoneId) {
         Instant.ofEpochMilli(session.startTime)
-            .atZone(ZoneId.systemDefault())
+            .atZone(zoneId)
             .format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
     }
 
