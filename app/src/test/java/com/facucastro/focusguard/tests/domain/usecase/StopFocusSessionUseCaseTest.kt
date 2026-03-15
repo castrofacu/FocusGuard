@@ -1,9 +1,10 @@
-package com.facucastro.focusguard.domain.usecase
+package com.facucastro.focusguard.tests.domain.usecase
 
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.repository.FocusRepository
-import com.facucastro.focusguard.domain.repository.mockFocusRepository
-import com.facucastro.focusguard.domain.time.FakeTimeProvider
+import com.facucastro.focusguard.providers.domain.repository.providesMockFocusRepository
+import com.facucastro.focusguard.domain.usecase.StopFocusSessionUseCase
+import com.facucastro.focusguard.providers.domain.time.providesFakeTimeProvider
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -18,8 +19,8 @@ class StopFocusSessionUseCaseTest {
         // GIVEN
         val startTime = 1672531200000L
         val laterTime = startTime + 5000L // 5 seconds later
-        val fakeTimeProvider = FakeTimeProvider(timeToReturn = laterTime)
-        val repository = mockFocusRepository()
+        val fakeTimeProvider = providesFakeTimeProvider(timeToReturn = laterTime)
+        val repository = providesMockFocusRepository()
         val useCase = StopFocusSessionUseCase(repository, fakeTimeProvider)
         val session = FocusSession(id = startTime, startTime = startTime, durationSeconds = 0, distractionCount = 0)
 
@@ -36,7 +37,7 @@ class StopFocusSessionUseCaseTest {
     @Test(expected = RuntimeException::class)
     fun `GIVEN time provider throws when invoke THEN propagates exception`() = runTest {
         // GIVEN
-        val fakeTimeProvider = FakeTimeProvider(shouldThrow = true)
+        val fakeTimeProvider = providesFakeTimeProvider(shouldThrow = true)
         val repository = mockk<FocusRepository>()
         val useCase = StopFocusSessionUseCase(repository, fakeTimeProvider)
         val session = FocusSession(id = 1L, startTime = 1L, durationSeconds = 0, distractionCount = 0)
@@ -48,9 +49,9 @@ class StopFocusSessionUseCaseTest {
     @Test
     fun `GIVEN repository save fails WHEN invoke THEN returns failure result`() = runTest {
         // GIVEN
-        val fakeTimeProvider = FakeTimeProvider(timeToReturn = 2000L)
+        val fakeTimeProvider = providesFakeTimeProvider(timeToReturn = 2000L)
         val expectedError = RuntimeException("DB Error")
-        val repository = mockFocusRepository(saveResult = Result.failure(expectedError))
+        val repository = providesMockFocusRepository(saveResult = Result.failure(expectedError))
         val useCase = StopFocusSessionUseCase(repository, fakeTimeProvider)
         val session = FocusSession(id = 1000L, startTime = 1000L, durationSeconds = 0, distractionCount = 0)
 
