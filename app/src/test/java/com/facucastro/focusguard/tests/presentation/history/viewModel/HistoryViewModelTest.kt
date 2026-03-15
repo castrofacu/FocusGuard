@@ -7,36 +7,25 @@ import com.facucastro.focusguard.providers.presentation.history.viewModel.TODAY_
 import com.facucastro.focusguard.providers.presentation.history.viewModel.YESTERDAY_MILLIS
 import com.facucastro.focusguard.providers.presentation.history.viewModel.providesHistoryViewModel
 import com.facucastro.focusguard.providers.domain.model.providesFocusSession
-import kotlinx.coroutines.Dispatchers
+import com.facucastro.focusguard.utlis.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule(UnconfinedTestDispatcher())
 
     @Test
     fun `GIVEN viewModel just created WHEN no emission yet THEN initial state is loading`() =
@@ -56,6 +45,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
             val finalState = viewModel.uiState.value
 
             // THEN
@@ -75,6 +65,7 @@ class HistoryViewModelTest {
 
         // WHEN
         startCollecting(viewModel)
+        runCurrent()
         val group = viewModel.uiState.value.sessionGroups.single()
 
         // THEN
@@ -90,6 +81,7 @@ class HistoryViewModelTest {
 
         // WHEN
         startCollecting(viewModel)
+        runCurrent()
         val group = viewModel.uiState.value.sessionGroups.single()
 
         // THEN
@@ -106,6 +98,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
             val group = viewModel.uiState.value.sessionGroups.single()
 
             // THEN
@@ -128,6 +121,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
             val groups = viewModel.uiState.value.sessionGroups
 
             // THEN
@@ -150,6 +144,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
             val daySessions = viewModel.uiState.value.sessionGroups.single().sessions
 
             // THEN
@@ -177,6 +172,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
 
             // THEN
             Assert.assertEquals(35, viewModel.uiState.value.totalFocusMinutes)
@@ -198,6 +194,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
 
             // THEN
             Assert.assertEquals(3f, viewModel.uiState.value.avgDistractions)
@@ -216,6 +213,7 @@ class HistoryViewModelTest {
 
             // WHEN
             startCollecting(viewModel)
+            runCurrent()
 
             // THEN
             Assert.assertEquals(3, viewModel.uiState.value.totalSessions)
@@ -223,7 +221,7 @@ class HistoryViewModelTest {
 
 
     private fun TestScope.startCollecting(viewModel: HistoryViewModel) {
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+        backgroundScope.launch {
             viewModel.uiState.collect {}
         }
     }
