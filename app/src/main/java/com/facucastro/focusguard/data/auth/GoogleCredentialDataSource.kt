@@ -14,7 +14,7 @@ class GoogleCredentialDataSource @Inject constructor(
     private val credentialManager: CredentialManager,
     private val googleIdOption: GetGoogleIdOption
 ) : GoogleCredentialProvider {
-    suspend fun getGoogleIdToken(context: Context): Result<String> {
+    override suspend fun getGoogleIdToken(context: Context): Result<String> {
         return try {
             val request = GetCredentialRequest.Builder()
                 .addCredentialOption(googleIdOption)
