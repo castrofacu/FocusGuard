@@ -2,7 +2,8 @@ package com.facucastro.focusguard.presentation.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.facucastro.focusguard.domain.repository.AuthRepository
+import com.facucastro.focusguard.domain.usecase.SignInAnonymouslyUseCase
+import com.facucastro.focusguard.domain.usecase.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val signInWithGoogle: SignInWithGoogleUseCase,
+    private val signInAnonymously: SignInAnonymouslyUseCase
 ) : ViewModel() {
 
     private val _viewState = MutableStateFlow<LoginContract.State>(LoginContract.State.Idle)
@@ -25,14 +27,18 @@ class LoginViewModel @Inject constructor(
 
     fun handleIntent(intent: LoginContract.Intent) {
         when (intent) {
-            is LoginContract.Intent.SignInWithGoogle -> {
-                performSignIn { authRepository.signInWithGoogle(intent.idToken) }
+            LoginContract.Intent.SignInWithGoogleClicked -> {
+                if (_viewState.value is LoginContract.State.Loading) return
+                viewModelScope.launch { _effect.send(LoginContract.Effect.LaunchGoogleSignIn) }
+            }
+            is LoginContract.Intent.GoogleSignInResult -> {
+                performSignIn { signInWithGoogle(intent.idToken) }
+            }
+            is LoginContract.Intent.GoogleSignInFailed -> {
+                _viewState.value = LoginContract.State.Error(intent.message)
             }
             LoginContract.Intent.SignInAnonymously -> {
-                performSignIn { authRepository.signInAnonymously() }
-            }
-            LoginContract.Intent.ErrorDisplayed -> {
-                _viewState.value = LoginContract.State.Idle
+                performSignIn { signInAnonymously() }
             }
         }
     }
@@ -43,14 +49,13 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _viewState.value = LoginContract.State.Loading
             val result = signInBlock()
-            
+
             if (result.isSuccess) {
                 _viewState.value = LoginContract.State.Idle
                 _effect.send(LoginContract.Effect.NavigateToHome)
             } else {
-                val message = result.exceptionOrNull()?.message ?: "Error desconocido"
+                val message = result.exceptionOrNull()?.message ?: "Unknown error"
                 _viewState.value = LoginContract.State.Error(message)
-                _effect.send(LoginContract.Effect.ShowError(message))
             }
         }
     }

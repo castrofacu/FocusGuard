@@ -9,13 +9,14 @@ class LoginContract {
     }
 
     sealed interface Intent {
-        data class SignInWithGoogle(val idToken: String) : Intent
+        data object SignInWithGoogleClicked : Intent
+        data class GoogleSignInResult(val idToken: String) : Intent
+        data class GoogleSignInFailed(val message: String) : Intent
         data object SignInAnonymously : Intent
-        data object ErrorDisplayed : Intent
     }
 
     sealed interface Effect {
         data object NavigateToHome : Effect
-        data class ShowError(val message: String) : Effect
+        data object LaunchGoogleSignIn : Effect
     }
 }
