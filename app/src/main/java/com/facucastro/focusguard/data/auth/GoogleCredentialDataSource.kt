@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.presentation.login
+package com.facucastro.focusguard.data.auth
 
 import android.content.Context
 import androidx.credentials.CredentialManager
@@ -9,20 +9,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GoogleAuthUiClient @Inject constructor(
+class GoogleCredentialDataSource @Inject constructor(
     private val credentialManager: CredentialManager,
     private val googleIdOption: GetGoogleIdOption
 ) {
-    suspend fun signIn(context: Context): Result<String> {
+    suspend fun getGoogleIdToken(context: Context): Result<String> {
         return try {
             val request = GetCredentialRequest.Builder()
                 .addCredentialOption(googleIdOption)
                 .build()
-
             val result = credentialManager.getCredential(context, request)
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-            
-            Result.success(googleIdTokenCredential.idToken)
+            val credential = GoogleIdTokenCredential.createFrom(result.credential.data)
+            Result.success(credential.idToken)
         } catch (e: Exception) {
             Result.failure(e)
         }

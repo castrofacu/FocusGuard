@@ -2,6 +2,7 @@ package com.facucastro.focusguard.di
 
 import android.content.Context
 import androidx.credentials.CredentialManager
+import com.facucastro.focusguard.BuildConfig
 import com.facucastro.focusguard.data.local.LocalSessionDataSource
 import com.facucastro.focusguard.data.local.RoomSessionDataSource
 import com.facucastro.focusguard.data.remote.FakeFocusApiServiceImpl
@@ -60,7 +61,7 @@ abstract class AppModule {
         @Singleton
         fun provideGoogleIdOption(): GetGoogleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId("YOUR_WEB_CLIENT_ID") // TODO: Replace with real ID
+            .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
             .build()
     }
 }
