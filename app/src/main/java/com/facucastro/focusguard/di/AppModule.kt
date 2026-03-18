@@ -1,5 +1,7 @@
 package com.facucastro.focusguard.di
 
+import android.content.Context
+import androidx.credentials.CredentialManager
 import com.facucastro.focusguard.data.local.LocalSessionDataSource
 import com.facucastro.focusguard.data.local.RoomSessionDataSource
 import com.facucastro.focusguard.data.remote.FakeFocusApiServiceImpl
@@ -10,11 +12,13 @@ import com.facucastro.focusguard.data.time.SystemTimeProvider
 import com.facucastro.focusguard.domain.repository.AuthRepository
 import com.facucastro.focusguard.domain.repository.FocusRepository
 import com.facucastro.focusguard.domain.time.TimeProvider
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -30,7 +34,6 @@ abstract class AppModule {
     @Singleton
     abstract fun bindFocusRepository(impl: FocusRepositoryImpl): FocusRepository
 
-    // To switch to the real Retrofit backend (RetrofitFocusApiServiceImpl)
     @Binds
     @Singleton
     abstract fun bindFocusApiService(impl: FakeFocusApiServiceImpl): FocusApiService
@@ -47,5 +50,17 @@ abstract class AppModule {
         @Provides
         @Singleton
         fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
+
+        @Provides
+        @Singleton
+        fun provideCredentialManager(@ApplicationContext context: Context): CredentialManager =
+            CredentialManager.create(context)
+
+        @Provides
+        @Singleton
+        fun provideGoogleIdOption(): GetGoogleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId("YOUR_WEB_CLIENT_ID") // TODO: Replace with real ID
+            .build()
     }
 }

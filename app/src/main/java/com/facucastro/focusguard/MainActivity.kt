@@ -26,9 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.facucastro.focusguard.presentation.history.HistoryScreen
 import com.facucastro.focusguard.presentation.home.view.HomeScreen
+import com.facucastro.focusguard.presentation.login.GoogleAuthUiClient
 import com.facucastro.focusguard.presentation.login.LoginScreen
 import com.facucastro.focusguard.ui.theme.FocusGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 private enum class Tab { Timer, History }
 
@@ -36,6 +38,9 @@ private enum class Tab { Timer, History }
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
+
+    @Inject
+    lateinit var googleAuthUiClient: GoogleAuthUiClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +52,7 @@ class MainActivity : ComponentActivity() {
                 if (isUserLoggedIn) {
                     MainAppContent()
                 } else {
-                    LoginScreen()
+                    LoginScreen(googleAuthUiClient = googleAuthUiClient)
                 }
             }
         }
