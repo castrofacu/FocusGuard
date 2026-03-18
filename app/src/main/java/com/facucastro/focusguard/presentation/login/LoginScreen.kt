@@ -24,14 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.facucastro.focusguard.presentation.core.LoadingComponent
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel = hiltViewModel(),
+    viewModel: LoginViewModel = viewModel(),
 ) {
     val viewState by viewModel.viewState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -73,7 +73,7 @@ fun LoginScreen(
 }
 
 @Composable
-private fun LoginContent(
+internal fun LoginContent(
     isLoading: Boolean,
     onGoogleClick: () -> Unit,
     onAnonymousClick: () -> Unit,
