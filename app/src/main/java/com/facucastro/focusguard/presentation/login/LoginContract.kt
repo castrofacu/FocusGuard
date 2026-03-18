@@ -1,5 +1,7 @@
 package com.facucastro.focusguard.presentation.login
 
+import android.content.Context
+
 class LoginContract {
 
     sealed interface State {
@@ -9,14 +11,11 @@ class LoginContract {
     }
 
     sealed interface Intent {
-        data object SignInWithGoogleClicked : Intent
-        data class GoogleSignInResult(val idToken: String) : Intent
-        data class GoogleSignInFailed(val message: String) : Intent
+        data class SignInWithGoogleClicked(val context: Context) : Intent
         data object SignInAnonymously : Intent
     }
 
     sealed interface Effect {
         data object NavigateToHome : Effect
-        data object LaunchGoogleSignIn : Effect
     }
 }

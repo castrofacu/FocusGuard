@@ -1,6 +1,5 @@
 package com.facucastro.focusguard.presentation.login
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +30,6 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun LoginScreen(
-    onRequestGoogleToken: suspend (Context) -> Result<String>,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
@@ -49,19 +47,6 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
-                LoginContract.Effect.LaunchGoogleSignIn -> {
-                    onRequestGoogleToken(context)
-                        .onSuccess { token ->
-                            viewModel.handleIntent(LoginContract.Intent.GoogleSignInResult(token))
-                        }
-                        .onFailure { error ->
-                            viewModel.handleIntent(
-                                LoginContract.Intent.GoogleSignInFailed(
-                                    error.message ?: "Failed to sign in with Google"
-                                )
-                            )
-                        }
-                }
                 LoginContract.Effect.NavigateToHome -> {
                     // Handled in MainActivity
                 }
@@ -76,7 +61,7 @@ fun LoginScreen(
         Box(modifier = Modifier.padding(padding)) {
             LoginContent(
                 isLoading = viewState is LoginContract.State.Loading,
-                onGoogleClick = { viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked) },
+                onGoogleClick = { viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked(context)) },
                 onAnonymousClick = { viewModel.handleIntent(LoginContract.Intent.SignInAnonymously) },
             )
 

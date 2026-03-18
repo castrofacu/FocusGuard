@@ -3,6 +3,7 @@ package com.facucastro.focusguard.di
 import android.content.Context
 import androidx.credentials.CredentialManager
 import com.facucastro.focusguard.BuildConfig
+import com.facucastro.focusguard.data.auth.GoogleCredentialDataSource
 import com.facucastro.focusguard.data.local.LocalSessionDataSource
 import com.facucastro.focusguard.data.local.RoomSessionDataSource
 import com.facucastro.focusguard.data.remote.FakeFocusApiServiceImpl
@@ -10,6 +11,7 @@ import com.facucastro.focusguard.data.remote.FocusApiService
 import com.facucastro.focusguard.data.repository.AuthRepositoryImpl
 import com.facucastro.focusguard.data.repository.FocusRepositoryImpl
 import com.facucastro.focusguard.data.time.SystemTimeProvider
+import com.facucastro.focusguard.domain.auth.GoogleCredentialProvider
 import com.facucastro.focusguard.domain.repository.AuthRepository
 import com.facucastro.focusguard.domain.repository.FocusRepository
 import com.facucastro.focusguard.domain.time.TimeProvider
@@ -46,6 +48,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGoogleCredentialProvider(impl: GoogleCredentialDataSource): GoogleCredentialProvider
 
     companion object {
         @Provides

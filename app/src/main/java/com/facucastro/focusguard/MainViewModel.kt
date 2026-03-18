@@ -1,13 +1,14 @@
 package com.facucastro.focusguard
 
 import androidx.lifecycle.ViewModel
-import com.facucastro.focusguard.domain.repository.AuthRepository
+import com.facucastro.focusguard.domain.usecase.ObserveLoginStateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    authRepository: AuthRepository
+    observeLoginState: ObserveLoginStateUseCase
 ) : ViewModel() {
-    val isUserLoggedIn = authRepository.isUserLoggedIn
+
+    val isUserLoggedIn = observeLoginState()
 }

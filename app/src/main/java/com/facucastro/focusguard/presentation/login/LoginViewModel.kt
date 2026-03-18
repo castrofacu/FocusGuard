@@ -2,6 +2,7 @@ package com.facucastro.focusguard.presentation.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.facucastro.focusguard.domain.usecase.GetGoogleIdTokenUseCase
 import com.facucastro.focusguard.domain.usecase.SignInAnonymouslyUseCase
 import com.facucastro.focusguard.domain.usecase.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
+    private val getGoogleIdToken: GetGoogleIdTokenUseCase,
     private val signInWithGoogle: SignInWithGoogleUseCase,
     private val signInAnonymously: SignInAnonymouslyUseCase
 ) : ViewModel() {
@@ -27,15 +29,13 @@ class LoginViewModel @Inject constructor(
 
     fun handleIntent(intent: LoginContract.Intent) {
         when (intent) {
-            LoginContract.Intent.SignInWithGoogleClicked -> {
-                if (_viewState.value is LoginContract.State.Loading) return
-                viewModelScope.launch { _effect.send(LoginContract.Effect.LaunchGoogleSignIn) }
-            }
-            is LoginContract.Intent.GoogleSignInResult -> {
-                performSignIn { signInWithGoogle(intent.idToken) }
-            }
-            is LoginContract.Intent.GoogleSignInFailed -> {
-                _viewState.value = LoginContract.State.Error(intent.message)
+            is LoginContract.Intent.SignInWithGoogleClicked -> {
+                performSignIn {
+                    getGoogleIdToken(intent.context)
+                        .mapCatching { token ->
+                            signInWithGoogle(token).getOrThrow()
+                        }
+                }
             }
             LoginContract.Intent.SignInAnonymously -> {
                 performSignIn { signInAnonymously() }
