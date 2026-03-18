@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.presentation.login
+package com.facucastro.focusguard.presentation.login.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.facucastro.focusguard.presentation.core.LoadingComponent
+import com.facucastro.focusguard.presentation.login.viewModel.LoginViewModel
+import com.facucastro.focusguard.presentation.login.contract.LoginContract
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable

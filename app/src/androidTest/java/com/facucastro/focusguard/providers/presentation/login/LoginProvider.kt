@@ -1,7 +1,7 @@
 package com.facucastro.focusguard.providers.presentation.login
 
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
-import com.facucastro.focusguard.presentation.login.LoginContent
+import com.facucastro.focusguard.presentation.login.view.LoginContent
 
 fun ComposeContentTestRule.providesLoginContent(
     isLoading: Boolean = false,

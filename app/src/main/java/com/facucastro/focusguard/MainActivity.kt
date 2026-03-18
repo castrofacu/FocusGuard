@@ -26,10 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.facucastro.focusguard.presentation.history.HistoryScreen
 import com.facucastro.focusguard.presentation.home.view.HomeScreen
-import com.facucastro.focusguard.presentation.login.LoginScreen
+import com.facucastro.focusguard.presentation.login.view.LoginScreen
 import com.facucastro.focusguard.ui.theme.FocusGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 private enum class Tab { Timer, History }
 

@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.presentation.login
+package com.facucastro.focusguard.presentation.login.contract
 
 import android.content.Context
 

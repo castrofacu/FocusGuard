@@ -1,10 +1,11 @@
-package com.facucastro.focusguard.presentation.login
+package com.facucastro.focusguard.presentation.login.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.facucastro.focusguard.domain.usecase.GetGoogleIdTokenUseCase
 import com.facucastro.focusguard.domain.usecase.SignInAnonymouslyUseCase
 import com.facucastro.focusguard.domain.usecase.SignInWithGoogleUseCase
+import com.facucastro.focusguard.presentation.login.contract.LoginContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
