@@ -21,7 +21,7 @@ class AuthRepositoryImpl @Inject constructor(
         get() = firebaseAuth.currentUser?.email
 
     override val isAnonymous: Boolean
-        get() = firebaseAuth.currentUser?.isAnonymous ?: true
+        get() = firebaseAuth.currentUser?.isAnonymous ?: false
 
     override val isUserLoggedIn: Flow<Boolean> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
