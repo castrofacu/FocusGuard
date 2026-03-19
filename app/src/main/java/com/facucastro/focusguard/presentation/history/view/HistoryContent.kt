@@ -22,7 +22,7 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
 
     when {
         uiState.isLoading -> {
-            LoadingComponent()
+            LoadingComponent(modifier = Modifier.fillMaxSize())
         }
         uiState.sessionGroups.isEmpty() -> {
             HistoryEmptyState(modifier = modifier)

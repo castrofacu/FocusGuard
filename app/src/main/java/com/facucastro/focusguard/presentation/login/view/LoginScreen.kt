@@ -66,7 +66,7 @@ fun LoginScreen(
             )
 
             if (viewState is LoginContract.State.Loading) {
-                LoadingComponent()
+                LoadingComponent(modifier = Modifier.fillMaxSize())
             }
         }
     }
