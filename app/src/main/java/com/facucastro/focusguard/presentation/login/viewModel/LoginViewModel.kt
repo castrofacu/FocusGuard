@@ -25,7 +25,7 @@ class LoginViewModel @Inject constructor(
     private val _viewState = MutableStateFlow<LoginContract.State>(LoginContract.State.Idle)
     val viewState: StateFlow<LoginContract.State> = _viewState.asStateFlow()
 
-    private val _effect = Channel<LoginContract.Effect>()
+    private val _effect = Channel<LoginContract.Effect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
     fun handleIntent(intent: LoginContract.Intent) {
