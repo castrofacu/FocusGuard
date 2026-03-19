@@ -47,8 +47,8 @@ class LoginViewModel @Inject constructor(
     private fun performSignIn(signInBlock: suspend () -> Result<Unit>) {
         if (_viewState.value is LoginContract.State.Loading) return
 
+        _viewState.value = LoginContract.State.Loading
         viewModelScope.launch {
-            _viewState.value = LoginContract.State.Loading
             val result = signInBlock()
 
             if (result.isSuccess) {
