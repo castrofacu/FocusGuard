@@ -1,19 +1,17 @@
 package com.facucastro.focusguard.presentation.history.view
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.facucastro.focusguard.presentation.core.LoadingComponent
 import com.facucastro.focusguard.presentation.history.state.HistoryUiState
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -24,9 +22,7 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
 
     when {
         uiState.isLoading -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            LoadingComponent(modifier = Modifier.fillMaxSize())
         }
         uiState.sessionGroups.isEmpty() -> {
             HistoryEmptyState(modifier = modifier)
