@@ -1,12 +1,11 @@
 package com.facucastro.focusguard.domain.usecase
 
-import android.content.Context
 import com.facucastro.focusguard.domain.auth.GoogleCredentialProvider
 import javax.inject.Inject
 
 class GetGoogleIdTokenUseCase @Inject constructor(
     private val googleCredentialProvider: GoogleCredentialProvider
 ) {
-    suspend operator fun invoke(context: Context): Result<String> =
-        googleCredentialProvider.getGoogleIdToken(context)
+    suspend operator fun invoke(): Result<String> =
+        googleCredentialProvider.getGoogleIdToken()
 }

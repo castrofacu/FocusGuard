@@ -30,9 +30,9 @@ class LoginViewModel @Inject constructor(
 
     fun handleIntent(intent: LoginContract.Intent) {
         when (intent) {
-            is LoginContract.Intent.SignInWithGoogleClicked -> {
+            LoginContract.Intent.SignInWithGoogleClicked -> {
                 performSignIn {
-                    getGoogleIdToken(intent.context)
+                    getGoogleIdToken()
                         .mapCatching { token ->
                             signInWithGoogle(token).getOrThrow()
                         }

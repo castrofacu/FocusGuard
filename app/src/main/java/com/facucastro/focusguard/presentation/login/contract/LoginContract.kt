@@ -1,7 +1,5 @@
 package com.facucastro.focusguard.presentation.login.contract
 
-import android.content.Context
-
 class LoginContract {
 
     sealed interface State {
@@ -11,7 +9,7 @@ class LoginContract {
     }
 
     sealed interface Intent {
-        data class SignInWithGoogleClicked(val context: Context) : Intent
+        data object SignInWithGoogleClicked : Intent
         data object SignInAnonymously : Intent
     }
 
