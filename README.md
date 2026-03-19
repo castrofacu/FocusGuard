@@ -115,7 +115,7 @@ cd FocusGuard
 1. Create a project at [Firebase Console](https://console.firebase.google.com/)
 2. Add an Android app with package name `com.facucastro.focusguard`
 3. Download `google-services.json` and place it in `app/`
-4. Enable **Email/Password** (anonymous) and **Google** sign-in methods in Firebase Auth
+4. Enable **Anonymous** and **Google** sign-in methods in Firebase Auth
 
 ### 3. Google Sign-In (Credential Manager)
 
