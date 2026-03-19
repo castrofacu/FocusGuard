@@ -1,40 +1,177 @@
-# FocusGuard (MVP)
+# FocusGuard
 
-Context-aware focus mode app for Android. Detects distractions (motion/noise), tracks sessions, and syncs history.
+> A context-aware productivity timer for Android that monitors physical distractions in real time.
 
-# Architecture
-**Clean Architecture + MVVM** using Jetpack Compose, Hilt, and Coroutines/Flow.
-- **Domain:** Pure Kotlin. Use cases depend on interfaces (`DistractionMonitor`, `FocusRepository`).
-- **Data:** Platform implementations (`SensorManager`, `MediaRecorder`, Room, Retrofit, WorkManager sync).
-- **Presentation:** Jetpack Compose UI reacting to `StateFlow` (UI state) and `Channel` (one-shot side effects like Snackbars).
+[![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)
+[![Min SDK](https://img.shields.io/badge/minSdk-26-blue.svg)](https://developer.android.com/studio/releases/platforms)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.x-purple.svg)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://developer.android.com/jetpack/compose)
 
+FocusGuard is an Android app — part personal productivity tool, part Android development playground — that lets you start timed focus sessions and alerts you when it detects physical distractions like movement (accelerometer) or ambient noise (microphone). Sessions are stored locally with Room, synced to a remote API via WorkManager, and protected by Firebase Authentication with support for anonymous and Google Sign-In.
 
-# Native Resource Handling
-- **Accelerometer:** Uses `SENSOR_DELAY_NORMAL` to detect movement (> 2.5 m/s²) while minimizing battery drain.
-- **Microphone:** Uses `MediaRecorder.maxAmplitude` polled every 500ms (> 70 dB threshold).
-- **Lifecycle:** Resources are explicitly acquired on `start()` and released in `stop()` via `try/finally` blocks when the `viewModelScope` is cleared.
-- **Notifications:** Posts to a dedicated channel (`focus_distraction_channel`). Uses a custom `throttleFirst` (2-second window) to prevent spam during continuous distractions.
+---
 
-# Testability
-- **Dependency Inversion:** All hardware and framework components (sensors, APIs, storage) are hidden behind interfaces.
-- **No Android Dependencies in Logic:** The Domain and ViewModels can be tested purely on the JVM using fakes (e.g., `FakeDistractionMonitor`, `FakeFocusRepository`).
+## Table of Contents
 
-# Trade-offs Made
-- **Offline-first Room storage:** Sessions are saved to Room first and synced to the API in the background. Trade-off: More moving parts than direct API writes, but resilient to flaky connectivity.
-- **viewModelScope vs ForegroundService:** Sensor monitoring runs in the ViewModel. Trade-off: The OS will kill the session if the app is backgrounded for too long.
-- **Fake API:** Used a fake repository implementation (`FakeFocusApiServiceImpl`) to simulate network calls without blocking the UI flow.
-- **Manual State vs NavGraph:** Navigation relies on a simple enum state (remember { mutableStateOf(Tab) }) instead of Jetpack Navigation. Trade-off: Perfectly adequate and removes boilerplate for a simple 2-screen MVP, but lacks deep-linking and back-stack management which would be needed as the app grows.
-- **MediaRecorder vs AudioRecord:** Selected MediaRecorder for noise detection as it directly surfaces maxAmplitude without manual byte-buffer reading. Trade-off: Heavier and offers less granular signal control than AudioRecord, but significantly faster to implement securely for basic threshold-based detection.
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Running Tests](#running-tests)
+- [Key Design Decisions](#key-design-decisions)
 
-# Intentionally Deprioritized
-- **History UI:** The data pipeline exists (`getHistory()`), but the Compose screen and ViewModel for the list were omitted.
-- **Unit Tests Implementation:** The architecture is fully decoupled for testing, but the actual test cases were not written due to time constraints.
+---
 
-# Future Improvements & Scaling
-If given more time and preparing for a production environment, I would prioritize:
+## Features
 
-- **Foreground Service:** Move sensor collection into a bound `ForegroundService` with a persistent notification to survive backgrounding.
-- **Room Evolution:** Add indexes, migrations, data reconciliation, and richer history queries as session volume grows.
-- **Real API Integration:** Replace the fake API implementation currently bound in DI and keep WorkManager for guaranteed offline-to-online syncing.
-- **Debounce/Throttling Enhancements:** Move the distraction throttling logic further upstream into the domain layer.
-- **Write Tests:** Implement tests for ViewModels and Use Cases using `kotlinx-coroutines-test`.
+- **Focus Timer** — Start, pause, resume and stop timed focus sessions
+- **Distraction Detection** — Real-time monitoring via accelerometer (movement > 2.5 m/s²) and microphone (noise ≥ 70 dB)
+- **Distraction Notifications** — Rate-limited system notifications (2 s debounce window) alerting the user without spamming
+- **Session History** — Grouped, annotated list of past sessions with per-session stats (duration, distraction count) and an at-a-glance summary header (total sessions, total focus minutes, avg distractions)
+- **Offline-First Sync** — Sessions saved to Room immediately; background WorkManager job syncs to remote API whenever connectivity is available
+- **Firebase Authentication** — Anonymous sign-in out of the box; optional upgrade to a full Google account with account-linking support
+- **Mixed UI Patterns** — Login screen uses **MVI** (`LoginContract` with State/Intent/Effect); Home and History screens use **MVVM** (`StateFlow` + `Channel` events)
+
+---
+
+## Architecture
+
+FocusGuard follows **Clean Architecture** with a strict three-layer separation and **Hilt** for dependency injection.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                            Presentation                              │
+│  LoginScreen (MVI)   │  HomeScreen (MVVM)   │  HistoryScreen (MVVM)  │
+│  LoginViewModel      │  HomeViewModel       │  HistoryViewModel      │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │ Use Cases
+┌────────────────────────────▼────────────────────────────┐
+│                          Domain                         │
+│  StartFocusSessionUseCase  │  StopFocusSessionUseCase   │
+│  GetHistoryUseCase         │  Auth Use Cases (×4)       │
+│  FocusRepository (i/f)     │  DistractionMonitor (i/f)  │
+│  AuthRepository (i/f)      │  TimeProvider (i/f)        │
+└────────────────────────────┬────────────────────────────┘
+                             │ Implementations
+┌────────────────────────────▼────────────────────────────┐
+│                          Data                           │
+│  Room (SessionDao, AppDatabase)                         │
+│  Retrofit + OkHttp (FocusRetrofitApi)                   │
+│  WorkManager (SyncSessionsWorker)                       │
+│  SensorManager (AccelerometerDistractionMonitor)        │
+│  MediaRecorder (MicrophoneDistractionMonitor)           │
+│  Firebase Auth (AuthRepositoryImpl)                     │
+│  CredentialManager (GoogleCredentialDataSource)         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Pattern Breakdown
+
+| Screen | Pattern | State holder | One-shot events |
+|--------|---------|-------------|----------------|
+| Login | **MVI** | `MutableStateFlow<LoginContract.State>` | `Channel<LoginContract.Effect>` |
+| Home | **MVVM** | `MutableStateFlow<HomeUiState>` | `Channel<HomeEvent>` |
+| History | **MVVM** | `StateFlow<HistoryUiState>` (stateIn) | — |
+
+---
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Language | Kotlin |
+| UI | Jetpack Compose + Material 3 |
+| Architecture | Clean Architecture, MVVM, MVI |
+| DI | Hilt |
+| Async | Coroutines + Flow |
+| Local DB | Room |
+| Networking | Retrofit + OkHttp + Gson |
+| Background Work | WorkManager (`CoroutineWorker`, `@HiltWorker`) |
+| Authentication | Firebase Auth (Anonymous + Google Sign-In via CredentialManager) |
+| Crash Reporting | Firebase Crashlytics |
+| Sensors | SensorManager (Accelerometer), MediaRecorder (Microphone) |
+| Notifications | NotificationManager + NotificationChannel |
+| Testing | JUnit 4, MockK, kotlinx-coroutines-test, Compose UI Test |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Android Studio Hedgehog or later
+- JDK 17
+- A Firebase project with **Authentication** and **Crashlytics** enabled
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/facucastro/FocusGuard.git
+cd FocusGuard
+```
+
+### 2. Firebase setup
+
+1. Create a project at [Firebase Console](https://console.firebase.google.com/)
+2. Add an Android app with package name `com.facucastro.focusguard`
+3. Download `google-services.json` and place it in `app/`
+4. Enable **Anonymous** and **Google** sign-in methods in Firebase Auth
+
+### 3. Google Sign-In (Credential Manager)
+
+1. In your Firebase project, copy the **Web Client ID** from the Google Sign-In provider settings
+2. Open `local.properties` and add:
+   ```properties
+   GOOGLE_WEB_CLIENT_ID=your-web-client-id-here
+   ```
+
+### 4. Build & run
+
+```bash
+./gradlew assembleDebug
+```
+
+Or open the project in Android Studio and run the `app` configuration on a device or emulator (API 26+).
+
+> **Note:** The app currently uses `FakeFocusApiServiceImpl` for remote API calls. No real backend is required to run the app.
+
+---
+
+## Running Tests
+
+```bash
+# Unit tests
+./gradlew test
+
+# Instrumented (UI) tests — requires connected device or emulator
+./gradlew connectedAndroidTest
+```
+
+---
+
+## Key Design Decisions
+
+**Offline-first sync**  
+Sessions are always written to Room first. A `WorkManager` `OneTimeWorkRequest` with `NetworkType.CONNECTED` constraint and exponential backoff is enqueued after every save, guaranteeing sync even if the device is offline at the time of the session.
+
+**Sensor monitoring in ViewModel scope**  
+Sensor collection runs in `viewModelScope` for simplicity. This is a known trade-off: the OS may kill the session if the app is backgrounded for an extended period. A `ForegroundService` is the correct long-term solution (tracked in the roadmap).
+
+**MVI for Login, MVVM for Home/History**  
+Login has a strict request→response lifecycle (idle → loading → success/error) which maps naturally to MVI's unidirectional flow and explicit `Effect` for one-time navigation. Home and History have more continuous, evolving state that is well-served by MVVM with a `StateFlow` and a side-effect `Channel`.
+
+**Anonymous-to-Google account linking**  
+When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts `linkWithCredential`. If the Google account already exists (`FirebaseAuthUserCollisionException`), it falls back to a direct `signInWithCredential`, preserving a seamless UX.
+
+**Composite sensor monitor**  
+`CompositeDistractionMonitor` merges the `SharedFlow`s from both `AccelerometerDistractionMonitor` and `MicrophoneDistractionMonitor` using `Flow.merge()`, exposing a single `DistractionMonitor` interface to the ViewModel.
+
+---
+
+## Roadmap
+
+- [ ] Migrate sensor collection to a bound `ForegroundService`
+- [ ] Adopt Navigation Compose with a proper `NavHost`
+- [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl`)
+- [ ] Glance API home-screen widget
+- [ ] Pomodoro-style configurable intervals
