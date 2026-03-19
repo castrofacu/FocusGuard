@@ -21,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,7 +36,6 @@ fun LoginScreen(
 ) {
     val viewState by viewModel.viewState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
 
     val errorMessage = (viewState as? LoginContract.State.Error)?.message
     LaunchedEffect(errorMessage) {
@@ -63,7 +61,7 @@ fun LoginScreen(
         Box(modifier = Modifier.padding(padding)) {
             LoginContent(
                 isLoading = viewState is LoginContract.State.Loading,
-                onGoogleClick = { viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked(context)) },
+                onGoogleClick = { viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked) },
                 onAnonymousClick = { viewModel.handleIntent(LoginContract.Intent.SignInAnonymously) },
             )
 

@@ -8,6 +8,6 @@ fun providesMockGoogleCredentialProvider(
     idTokenResult: Result<String> = Result.success("mock_id_token")
 ): GoogleCredentialProvider {
     return mockk<GoogleCredentialProvider> {
-        coEvery { getGoogleIdToken(any()) } returns idTokenResult
+        coEvery { getGoogleIdToken() } returns idTokenResult
     }
 }

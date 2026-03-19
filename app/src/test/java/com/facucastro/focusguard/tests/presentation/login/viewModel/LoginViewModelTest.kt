@@ -1,10 +1,8 @@
 package com.facucastro.focusguard.tests.presentation.login.viewModel
 
-import android.content.Context
 import com.facucastro.focusguard.presentation.login.contract.LoginContract
 import com.facucastro.focusguard.providers.presentation.login.viewModel.providesLoginViewModel
 import com.facucastro.focusguard.utils.MainDispatcherRule
-import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -20,8 +18,6 @@ class LoginViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(UnconfinedTestDispatcher())
-
-    private val mockContext = mockk<Context>(relaxed = true)
 
     @Test
     fun `GIVEN viewModel WHEN initialized THEN state is Idle`() = runTest {
@@ -82,7 +78,7 @@ class LoginViewModelTest {
             val job = launch { viewModel.effect.toList(effects) }
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked(mockContext))
+            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked)
             runCurrent()
 
             // THEN
@@ -101,7 +97,7 @@ class LoginViewModelTest {
             )
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked(mockContext))
+            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked)
             runCurrent()
 
             // THEN
@@ -122,7 +118,7 @@ class LoginViewModelTest {
             )
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked(mockContext))
+            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked)
             runCurrent()
 
             // THEN
