@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service
 @Service
 class FocusSessionServiceImpl(
     private val repository: FocusSessionRepository
-
 ) : FocusSessionService {
 
     override fun createSession(dto: FocusSessionDto): FocusSessionDto {
