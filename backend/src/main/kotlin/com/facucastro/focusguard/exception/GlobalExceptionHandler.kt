@@ -19,4 +19,9 @@ class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(HttpStatus.BAD_REQUEST.value(), message))
     }
+
+    @ExceptionHandler(SessionNotFoundException::class)
+    fun handleSessionNotFound(ex: SessionNotFoundException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.message ?: "Session not found"))
 }
