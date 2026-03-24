@@ -6,6 +6,7 @@
 [![Min SDK](https://img.shields.io/badge/minSdk-26-blue.svg)](https://developer.android.com/studio/releases/platforms)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.x-purple.svg)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://developer.android.com/jetpack/compose)
+[![Spring Boot](https://img.shields.io/badge/Backend-Spring%20Boot-green.svg)](https://spring.io/projects/spring-boot)
 
 FocusGuard is an Android app — part personal productivity tool, part Android development playground — that lets you start timed focus sessions and alerts you when it detects physical distractions like movement (accelerometer) or ambient noise (microphone). Sessions are stored locally with Room, synced to a remote API via WorkManager, and protected by Firebase Authentication with support for anonymous and Google Sign-In.
 
@@ -18,6 +19,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Running Tests](#running-tests)
+- [Backend](#backend)
 - [Key Design Decisions](#key-design-decisions)
 
 ---
@@ -87,6 +89,7 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 | Local DB | Room |
 | Networking | Retrofit + OkHttp + Gson |
 | Background Work | WorkManager (`CoroutineWorker`, `@HiltWorker`) |
+| Backend | Spring Boot 4 (Kotlin), Spring Data JPA, H2 (dev), Hibernate Validator |
 | Authentication | Firebase Auth (Anonymous + Google Sign-In via CredentialManager) |
 | Crash Reporting | Firebase Crashlytics |
 | Sensors | SensorManager (Accelerometer), MediaRecorder (Microphone) |
@@ -128,18 +131,21 @@ cd FocusGuard
 ### 4. Build & run
 
 ```bash
+cd android
 ./gradlew assembleDebug
 ```
 
 Or open the project in Android Studio and run the `app` configuration on a device or emulator (API 26+).
 
-> **Note:** The app currently uses `FakeFocusApiServiceImpl` for remote API calls. No real backend is required to run the app.
+> **Note:** The app currently uses `FakeFocusApiServiceImpl` for remote API calls. To use the real backend, see the [Backend](#backend) section.
 
 ---
 
 ## Running Tests
 
 ```bash
+cd android
+
 # Unit tests
 ./gradlew test
 
@@ -168,10 +174,45 @@ When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts
 
 ---
 
+## Backend
+
+The `backend` directory contains a Spring Boot REST API that the Android app syncs sessions to.
+
+### Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Spring Boot 4 (Kotlin) |
+| Persistence | Spring Data JPA + Hibernate |
+| Database | H2 in-memory (dev) |
+| Validation | Hibernate Validator (`spring-boot-starter-validation`) |
+
+### API
+
+| Method | Path | Description | Success | Error |
+|--------|------|-------------|---------|-------|
+| `POST` | `/sessions` | Create a session | 201 Created | 400 Bad Request |
+| `GET` | `/sessions` | List all sessions | 200 OK | — |
+| `GET` | `/sessions/{id}` | Get session by ID | 200 OK | 404 Not Found |
+
+The client (Android) generates the session ID before local Room storage. The server accepts that ID as-is, consistent with the offline-first architecture.
+
+### Running locally
+
+```bash
+cd backend
+./gradlew bootRun
+```
+
+The API is available at `http://localhost:8080`. An H2 web console is available at `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:focusguarddb`, username: `sa`, no password).
+
+---
+
 ## Roadmap
 
 - [ ] Migrate sensor collection to a bound `ForegroundService`
 - [ ] Adopt Navigation Compose with a proper `NavHost`
-- [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl`)
+- [ ] Wire the app to the real backend (replace `FakeFocusApiServiceImpl`)
 - [ ] Glance API home-screen widget
 - [ ] Pomodoro-style configurable intervals
+- [ ] Migrate backend DB from H2 to PostgreSQL for production
