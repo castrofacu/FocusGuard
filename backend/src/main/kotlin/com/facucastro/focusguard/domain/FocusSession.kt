@@ -7,13 +7,9 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "focus_sessions")
 class FocusSession(
-
     @Id
-    val id: Long,
-
-    val startTime: Long,
-
-    val durationSeconds: Int,
-
-    val distractionCount: Int
+    var id: Long,
+    var startTime: Long,
+    var durationSeconds: Int,
+    var distractionCount: Int
 )
