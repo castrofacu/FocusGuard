@@ -39,4 +39,4 @@ out/
 ### Kotlin ###
 .kotlin
 
-1.local.properties
+local.properties
