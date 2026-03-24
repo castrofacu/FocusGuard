@@ -19,11 +19,4 @@ class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(HttpStatus.BAD_REQUEST.value(), message))
     }
-
-    @ExceptionHandler(SessionAlreadyExistsException::class)
-    fun handleDuplicateSession(ex: SessionAlreadyExistsException): ResponseEntity<ErrorResponse> {
-        return ResponseEntity
-            .status(HttpStatus.CONFLICT)
-            .body(ErrorResponse(HttpStatus.CONFLICT.value(), ex.message ?: "Session already exists"))
-    }
 }
