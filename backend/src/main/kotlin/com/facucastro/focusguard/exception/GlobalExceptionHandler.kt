@@ -1,6 +1,5 @@
 package com.facucastro.focusguard.exception
 
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -21,10 +20,10 @@ class GlobalExceptionHandler {
             .body(ErrorResponse(HttpStatus.BAD_REQUEST.value(), message))
     }
 
-    @ExceptionHandler(DataIntegrityViolationException::class)
-    fun handleDuplicateKey(ex: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
+    @ExceptionHandler(SessionAlreadyExistsException::class)
+    fun handleDuplicateSession(ex: SessionAlreadyExistsException): ResponseEntity<ErrorResponse> {
         return ResponseEntity
             .status(HttpStatus.CONFLICT)
-            .body(ErrorResponse(HttpStatus.CONFLICT.value(), "Session with this ID already exists"))
+            .body(ErrorResponse(HttpStatus.CONFLICT.value(), ex.message ?: "Session already exists"))
     }
 }
