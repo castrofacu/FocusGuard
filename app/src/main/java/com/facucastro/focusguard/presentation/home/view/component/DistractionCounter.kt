@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.presentation.home.view
+package com.facucastro.focusguard.presentation.home.view.component
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
