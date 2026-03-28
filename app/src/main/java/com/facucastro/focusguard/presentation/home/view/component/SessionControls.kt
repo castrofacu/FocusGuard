@@ -17,8 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.facucastro.focusguard.domain.model.SessionStatus
-import com.facucastro.focusguard.presentation.core.FocusGuardButton
-import com.facucastro.focusguard.presentation.core.FocusGuardButtonVariant
+import com.facucastro.focusguard.presentation.core.component.FocusGuardButton
+import com.facucastro.focusguard.presentation.core.component.FocusGuardButtonVariant
 
 @Composable
 fun SessionControls(

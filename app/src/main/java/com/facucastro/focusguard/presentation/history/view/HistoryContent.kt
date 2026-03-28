@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.facucastro.focusguard.presentation.core.LoadingComponent
+import com.facucastro.focusguard.presentation.core.component.LoadingComponent
 import com.facucastro.focusguard.presentation.history.state.HistoryUiState
 import java.time.format.DateTimeFormatter
 import java.util.Locale

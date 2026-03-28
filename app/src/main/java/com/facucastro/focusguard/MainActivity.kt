@@ -29,7 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.facucastro.focusguard.presentation.history.HistoryScreen
 import com.facucastro.focusguard.presentation.home.view.HomeScreen
 import com.facucastro.focusguard.presentation.login.view.LoginScreen
-import com.facucastro.focusguard.ui.theme.FocusGuardTheme
+import com.facucastro.focusguard.presentation.core.theme.FocusGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 private enum class Tab { Focus, Statistics }

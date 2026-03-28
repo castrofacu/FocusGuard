@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.presentation.core
+package com.facucastro.focusguard.presentation.core.component
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height

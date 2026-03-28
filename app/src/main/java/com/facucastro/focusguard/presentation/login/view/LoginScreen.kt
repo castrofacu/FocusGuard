@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.facucastro.focusguard.presentation.core.LoadingComponent
+import com.facucastro.focusguard.presentation.core.component.LoadingComponent
 import com.facucastro.focusguard.presentation.login.contract.LoginContract
 import com.facucastro.focusguard.presentation.login.viewModel.LoginViewModel
 import kotlinx.coroutines.flow.collectLatest
