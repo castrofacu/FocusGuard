@@ -8,4 +8,6 @@ data class HomeUiState(
     val elapsedSeconds: Int = 0,
     val distractionCount: Int = 0,
     val lastDistractionEvent: DistractionEvent? = null,
-)
+) {
+    val shieldStrength: Int = (100 - distractionCount * 10).coerceAtLeast(0)
+}
