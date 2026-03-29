@@ -6,15 +6,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Timelapse
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -25,32 +25,23 @@ fun HistoryEmptyState(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
     ) {
         Icon(
-            imageVector = Icons.Outlined.Timelapse,
+            imageVector = Icons.Filled.Shield,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
             modifier = Modifier.size(80.dp),
         )
         Text(
-            text = "No sessions yet",
+            text = "No missions recorded yet",
             style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = "Complete a session to see your history here",
+            text = "Start your first shield session to build your guardian record.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HistoryEmptyStatePreview() {
-    MaterialTheme {
-        HistoryEmptyState(
-            modifier = Modifier.padding(16.dp)
         )
     }
 }

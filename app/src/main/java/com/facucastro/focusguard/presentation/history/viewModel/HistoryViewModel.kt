@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
+import java.time.format.TextStyle
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -58,6 +60,18 @@ class HistoryViewModel @Inject constructor(
         val totalFocusMinutes = sessions.sumOf { it.durationSeconds } / 60
         val avgDistractions = if (sessions.isEmpty()) 0f
             else sessions.sumOf { it.distractionCount } / sessions.size.toFloat()
+        val totalDistractions = sessions.sumOf { it.distractionCount }
+
+        val weeklyMinutesByDay = (6 downTo 0).map { daysAgo ->
+            val date = today.minusDays(daysAgo.toLong())
+            val dayAbbr = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase()
+            val minutes = sessions
+                .filter { session ->
+                    Instant.ofEpochMilli(session.startTime).atZone(zone).toLocalDate() == date
+                }
+                .sumOf { it.durationSeconds } / 60
+            Pair(dayAbbr, minutes)
+        }
 
         return HistoryUiState(
             isLoading = false,
@@ -65,6 +79,8 @@ class HistoryViewModel @Inject constructor(
             totalSessions = sessions.size,
             totalFocusMinutes = totalFocusMinutes,
             avgDistractions = avgDistractions,
+            totalDistractions = totalDistractions,
+            weeklyMinutesByDay = weeklyMinutesByDay,
             zoneId = zone
         )
     }
