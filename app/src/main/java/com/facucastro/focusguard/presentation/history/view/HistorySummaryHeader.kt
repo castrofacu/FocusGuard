@@ -20,10 +20,9 @@ fun HistorySummaryHeader(
     totalDistractions: Int,
     modifier: Modifier = Modifier,
 ) {
-    val totalTimeValue = if(totalFocusMinutes >= 60) {
-        "${totalFocusMinutes / 60}h ${totalFocusMinutes % 60}m"
-    } else {
-        "${totalFocusMinutes}m"
+    val totalTimeValue = when {
+        totalFocusMinutes >= 60 -> "${totalFocusMinutes / 60}h"
+        else -> "${totalFocusMinutes}m"
     }
 
     Row(
