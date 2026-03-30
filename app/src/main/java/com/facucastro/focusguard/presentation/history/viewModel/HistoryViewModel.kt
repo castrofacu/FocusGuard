@@ -62,14 +62,14 @@ class HistoryViewModel @Inject constructor(
             else sessions.sumOf { it.distractionCount } / sessions.size.toFloat()
         val totalDistractions = sessions.sumOf { it.distractionCount }
 
+        val secondsByDate = sessions.groupingBy { session ->
+            Instant.ofEpochMilli(session.startTime).atZone(zone).toLocalDate()
+        }.fold(0) { acc, session -> acc + session.durationSeconds }
+
         val weeklyMinutesByDay = (6 downTo 0).map { daysAgo ->
             val date = today.minusDays(daysAgo.toLong())
             val dayAbbr = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase()
-            val minutes = sessions
-                .filter { session ->
-                    Instant.ofEpochMilli(session.startTime).atZone(zone).toLocalDate() == date
-                }
-                .sumOf { it.durationSeconds } / 60
+            val minutes = (secondsByDate[date] ?: 0) / 60
             Pair(dayAbbr, minutes)
         }
 
