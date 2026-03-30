@@ -42,7 +42,7 @@ fun HistorySummaryHeader(
             iconTint = MaterialTheme.colorScheme.secondary,
             label = "Focus",
             value = totalTimeValue,
-            subtitle = "this week",
+            subtitle = "all time",
             modifier = Modifier.weight(1f),
         )
         StatCard(

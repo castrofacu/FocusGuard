@@ -44,7 +44,7 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Your defensive prowess over the last 7 days.",
+                        text = "Your complete guardian record.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
