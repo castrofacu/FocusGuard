@@ -3,6 +3,7 @@ package com.facucastro.focusguard.tests.presentation.history.viewModel
 import com.facucastro.focusguard.presentation.history.state.HistoryUiState
 import com.facucastro.focusguard.presentation.history.viewModel.HistoryViewModel
 import com.facucastro.focusguard.providers.presentation.history.viewModel.OLDER_MILLIS
+import com.facucastro.focusguard.providers.presentation.history.viewModel.TODAY_MILLIS
 import com.facucastro.focusguard.providers.presentation.history.viewModel.TODAY_MORNING_MILLIS
 import com.facucastro.focusguard.providers.presentation.history.viewModel.YESTERDAY_MILLIS
 import com.facucastro.focusguard.providers.presentation.history.viewModel.providesHistoryViewModel
@@ -221,6 +222,136 @@ class HistoryViewModelTest {
 
             // THEN
             Assert.assertEquals(3, viewModel.uiState.value.totalSessions)
+        }
+
+    @Test
+    fun `GIVEN sessions with known distractions WHEN flow emits THEN totalDistractions is sum of all distraction counts`() =
+        runTest {
+            // GIVEN
+            val sessions = listOf(
+                providesFocusSession(id = 1L, startTime = TODAY_MORNING_MILLIS, distractionCount = 3),
+                providesFocusSession(id = 2L, startTime = YESTERDAY_MILLIS, distractionCount = 5),
+            )
+            val viewModel = providesHistoryViewModel(historyFlow = flowOf(sessions))
+
+            // WHEN
+            startCollecting(viewModel)
+            runCurrent()
+
+            // THEN
+            Assert.assertEquals(8, viewModel.uiState.value.totalDistractions)
+        }
+
+    @Test
+    fun `GIVEN no sessions WHEN flow emits THEN totalDistractions is zero`() = runTest {
+        // GIVEN
+        val viewModel = providesHistoryViewModel(historyFlow = flowOf(emptyList()))
+
+        // WHEN
+        startCollecting(viewModel)
+        runCurrent()
+
+        // THEN
+        Assert.assertEquals(0, viewModel.uiState.value.totalDistractions)
+    }
+
+    @Test
+    fun `GIVEN any sessions WHEN flow emits THEN weeklyMinutesByDay has 7 entries with correct day labels`() =
+        runTest {
+            // GIVEN
+            val viewModel = providesHistoryViewModel(historyFlow = flowOf(emptyList()))
+
+            // WHEN
+            startCollecting(viewModel)
+            runCurrent()
+            val days = viewModel.uiState.value.weeklyMinutesByDay
+
+            // THEN — today is 2024-04-10 (Wed), window starts Thu Apr 4
+            Assert.assertEquals(7, days.size)
+            Assert.assertEquals(
+                listOf("THU", "FRI", "SAT", "SUN", "MON", "TUE", "WED"),
+                days.map { it.first }
+            )
+        }
+
+    @Test
+    fun `GIVEN session today WHEN flow emits THEN weeklyMinutesByDay last entry has correct minutes`() =
+        runTest {
+            // GIVEN — 3600 seconds = 60 minutes
+            val viewModel = providesHistoryViewModel(
+                historyFlow = flowOf(
+                    listOf(providesFocusSession(startTime = TODAY_MORNING_MILLIS, durationSeconds = 3600))
+                )
+            )
+
+            // WHEN
+            startCollecting(viewModel)
+            runCurrent()
+            val days = viewModel.uiState.value.weeklyMinutesByDay
+
+            // THEN
+            Assert.assertEquals(Pair("WED", 60), days.last())
+        }
+
+    @Test
+    fun `GIVEN session yesterday WHEN flow emits THEN weeklyMinutesByDay second-to-last entry has correct minutes`() =
+        runTest {
+            // GIVEN — 1800 seconds = 30 minutes
+            val viewModel = providesHistoryViewModel(
+                historyFlow = flowOf(
+                    listOf(providesFocusSession(startTime = YESTERDAY_MILLIS, durationSeconds = 1800))
+                )
+            )
+
+            // WHEN
+            startCollecting(viewModel)
+            runCurrent()
+            val days = viewModel.uiState.value.weeklyMinutesByDay
+
+            // THEN — yesterday is TUE at index 5, today (WED) has 0
+            Assert.assertEquals(Pair("TUE", 30), days[5])
+            Assert.assertEquals(Pair("WED", 0), days[6])
+        }
+
+    @Test
+    fun `GIVEN sessions on different days in week WHEN flow emits THEN weeklyMinutesByDay sums minutes per day correctly`() =
+        runTest {
+            // GIVEN
+            val sessions = listOf(
+                providesFocusSession(id = 1L, startTime = TODAY_MORNING_MILLIS, durationSeconds = 1200),  // 20 min, WED
+                providesFocusSession(id = 2L, startTime = TODAY_MORNING_MILLIS + 3_600_000L, durationSeconds = 1200), // 20 min, WED
+                providesFocusSession(id = 3L, startTime = YESTERDAY_MILLIS, durationSeconds = 3000),      // 50 min, TUE
+            )
+            val viewModel = providesHistoryViewModel(historyFlow = flowOf(sessions))
+
+            // WHEN
+            startCollecting(viewModel)
+            runCurrent()
+            val days = viewModel.uiState.value.weeklyMinutesByDay
+
+            // THEN
+            Assert.assertEquals(Pair("TUE", 50), days[5])
+            Assert.assertEquals(Pair("WED", 40), days[6])
+        }
+
+    @Test
+    fun `GIVEN session older than 7 days WHEN flow emits THEN weeklyMinutesByDay shows all zeros`() =
+        runTest {
+            // GIVEN — 8 days before today
+            val eightDaysAgoMillis = TODAY_MILLIS - 8 * 24 * 3_600_000L
+            val viewModel = providesHistoryViewModel(
+                historyFlow = flowOf(
+                    listOf(providesFocusSession(startTime = eightDaysAgoMillis, durationSeconds = 3600))
+                )
+            )
+
+            // WHEN
+            startCollecting(viewModel)
+            runCurrent()
+            val days = viewModel.uiState.value.weeklyMinutesByDay
+
+            // THEN
+            Assert.assertTrue(days.all { it.second == 0 })
         }
 
 

@@ -10,6 +10,8 @@ data class HistoryUiState(
     val totalSessions: Int = 0,
     val totalFocusMinutes: Int = 0,
     val avgDistractions: Float = 0f,
+    val totalDistractions: Int = 0,
+    val weeklyMinutesByDay: List<Pair<String, Int>> = emptyList(),
     val zoneId: ZoneId = ZoneId.systemDefault()
 ) {
     sealed class DateLabel {

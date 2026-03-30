@@ -22,8 +22,7 @@ class LoginScreenTest {
 
         // THEN
         composeTestRule.onNodeWithText("FocusGuard").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Protect your focus").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Login with Google").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Continue with Google").assertIsDisplayed()
         composeTestRule.onNodeWithText("Continue as Guest").assertIsDisplayed()
     }
 
@@ -36,7 +35,7 @@ class LoginScreenTest {
         )
 
         // WHEN
-        composeTestRule.onNodeWithText("Login with Google").performClick()
+        composeTestRule.onNodeWithText("Continue with Google").performClick()
 
         // THEN
         assertTrue(called)

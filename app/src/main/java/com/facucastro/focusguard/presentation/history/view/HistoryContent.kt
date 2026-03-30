@@ -1,7 +1,9 @@
 package com.facucastro.focusguard.presentation.history.view
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.facucastro.focusguard.presentation.core.component.LoadingComponent
 import com.facucastro.focusguard.presentation.history.state.HistoryUiState
@@ -32,12 +35,35 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
             ) {
+                item(key = "title") {
+                    Text(
+                        text = "Guardian Statistics",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Your complete guardian record.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(20.dp))
+                }
+
                 item(key = "summary_header") {
                     HistorySummaryHeader(
                         totalSessions = uiState.totalSessions,
                         totalFocusMinutes = uiState.totalFocusMinutes,
-                        avgDistractions = uiState.avgDistractions,
-                        modifier = Modifier.padding(bottom = 16.dp),
+                        totalDistractions = uiState.totalDistractions,
+                        modifier = Modifier.padding(bottom = 12.dp),
+                    )
+                }
+
+                item(key = "chart") {
+                    ShieldStrengthChart(
+                        weeklyMinutesByDay = uiState.weeklyMinutesByDay,
+                        modifier = Modifier.padding(bottom = 20.dp),
                     )
                 }
 
@@ -55,9 +81,11 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
                             is HistoryUiState.DateLabel.Other -> dl.date.format(dateFormatter)
                         }
                         Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                            text = label.uppercase(),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
                         )
                     }
 
