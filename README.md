@@ -22,8 +22,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
   <img width="32%" alt="Light Mode 1" src="https://github.com/user-attachments/assets/c2b31253-36d5-4e79-aa49-3bff06adb449" />
   <img width="32%" alt="Light Mode 2" src="https://github.com/user-attachments/assets/47af9d30-3617-4231-baf0-10cc01d12e5a" />
   <img width="32%" alt="Light Mode 3" src="https://github.com/user-attachments/assets/06b41b58-3766-4e48-afad-d4815495b41b" />
-</p
-
+</p>
 
 
 ---
