@@ -11,6 +11,23 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 
 ---
 
+<p align="center">
+  <img width="32%" src="https://github.com/user-attachments/assets/6e3ad83d-8e3d-4399-8a11-ccd6a6e6a0f1" />
+  <img width="32%" src="https://github.com/user-attachments/assets/4a4113a3-b143-4462-996c-5a4658f89cba" />
+  <img width="32%" src="https://github.com/user-attachments/assets/06fee44f-c615-4ab2-9f1e-526132c71a05" />
+
+</p>
+
+<p align="center">
+  <img width="32%" alt="Light Mode 1" src="https://github.com/user-attachments/assets/c2b31253-36d5-4e79-aa49-3bff06adb449" />
+  <img width="32%" alt="Light Mode 2" src="https://github.com/user-attachments/assets/47af9d30-3617-4231-baf0-10cc01d12e5a" />
+  <img width="32%" alt="Light Mode 3" src="https://github.com/user-attachments/assets/06b41b58-3766-4e48-afad-d4815495b41b" />
+</p
+
+
+
+---
+
 ## Table of Contents
 
 - [Features](#features)
@@ -173,5 +190,4 @@ When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts
 - [ ] Migrate sensor collection to a bound `ForegroundService`
 - [ ] Adopt Navigation Compose with a proper `NavHost`
 - [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl`)
-- [ ] Glance API home-screen widget
 - [ ] Pomodoro-style configurable intervals
