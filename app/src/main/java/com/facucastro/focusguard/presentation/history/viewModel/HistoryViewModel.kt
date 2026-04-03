@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.time.TimeProvider
 import com.facucastro.focusguard.domain.usecase.GetHistoryUseCase
-import com.facucastro.focusguard.presentation.history.state.HistoryUiState
+import com.facucastro.focusguard.presentation.history.contract.DateLabel
+import com.facucastro.focusguard.presentation.history.contract.HistoryState
+import com.facucastro.focusguard.presentation.history.contract.SessionGroup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,18 +24,18 @@ class HistoryViewModel @Inject constructor(
     private val timeProvider: TimeProvider
 ) : ViewModel() {
 
-    val uiState: StateFlow<HistoryUiState> = getHistoryUseCase()
+    val uiState: StateFlow<HistoryState> = getHistoryUseCase()
         .map { sessions -> computeUiState(sessions) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HistoryUiState(
+            initialValue = HistoryState(
                 isLoading = true,
                 zoneId = timeProvider.getZoneId()
             )
         )
 
-    private fun computeUiState(sessions: List<FocusSession>): HistoryUiState {
+    private fun computeUiState(sessions: List<FocusSession>): HistoryState {
         val zone = timeProvider.getZoneId()
         val today = Instant.ofEpochMilli(timeProvider.getCurrentTimeMillis())
             .atZone(zone).toLocalDate()
@@ -47,11 +49,11 @@ class HistoryViewModel @Inject constructor(
             .sortedByDescending { it.key }
             .map { (date, daySessions) ->
                 val label = when (date) {
-                    today -> HistoryUiState.DateLabel.Today
-                    yesterday -> HistoryUiState.DateLabel.Yesterday
-                    else -> HistoryUiState.DateLabel.Other(date)
+                    today -> DateLabel.Today
+                    yesterday -> DateLabel.Yesterday
+                    else -> DateLabel.Other(date)
                 }
-                HistoryUiState.SessionGroup(
+                SessionGroup(
                     dateLabel = label,
                     sessions = daySessions.sortedByDescending { it.startTime }
                 )
@@ -73,7 +75,7 @@ class HistoryViewModel @Inject constructor(
             Pair(dayAbbr, minutes)
         }
 
-        return HistoryUiState(
+        return HistoryState(
             isLoading = false,
             sessionGroups = groups,
             totalSessions = sessions.size,
