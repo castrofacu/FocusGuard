@@ -46,7 +46,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 - **Session History** — Grouped, annotated list of past sessions with per-session stats (duration, distraction count) and an at-a-glance summary header (total sessions, total focus minutes, avg distractions)
 - **Offline-First Sync** — Sessions saved to Room immediately; background WorkManager job syncs to remote API whenever connectivity is available
 - **Firebase Authentication** — Anonymous sign-in out of the box; optional upgrade to a full Google account with account-linking support
-- **Mixed UI Patterns** — Login screen uses **MVI** (`LoginContract` with State/Intent/Effect); Home and History screens use **MVVM** (`StateFlow` + `Channel` events)
+- **Mixed UI Patterns** — All screens use **MVI** via a shared `BaseMviViewModel<S, I, E>`: `LoginViewModel` and `HomeViewModel` expose `handleIntent()`; `HistoryViewModel` is a read-only variant with no intents or effects
 
 ---
 
@@ -57,7 +57,7 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                            Presentation                              │
-│  LoginScreen (MVI)   │  HomeScreen (MVVM)   │  HistoryScreen (MVVM)  │
+│  LoginScreen (MVI)   │  HomeScreen (MVI)    │  HistoryScreen (MVI)   │
 │  LoginViewModel      │  HomeViewModel       │  HistoryViewModel      │
 └────────────────────────────┬─────────────────────────────────────────┘
                              │ Use Cases
@@ -85,9 +85,11 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 
 | Screen | Pattern | State holder | One-shot events |
 |--------|---------|-------------|----------------|
-| Login | **MVI** | `MutableStateFlow<LoginContract.State>` | `Channel<LoginContract.Effect>` |
-| Home | **MVVM** | `MutableStateFlow<HomeUiState>` | `Channel<HomeEvent>` |
-| History | **MVVM** | `StateFlow<HistoryUiState>` (stateIn) | — |
+| Login | **MVI** | `StateFlow<LoginState>` | `Flow<LoginEffect>` via `BaseMviViewModel` |
+| Home | **MVI** | `StateFlow<HomeState>` | `Flow<HomeEffect>` via `BaseMviViewModel` |
+| History | **MVI** (read-only) | `StateFlow<HistoryState>` (`stateIn`) | — |
+
+All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract/` sub-package with one file per type (`*State.kt`, `*Intent.kt`, `*Effect.kt`). `HistoryViewModel` uses `Nothing` for `I` and `E` since History has no user-initiated intents or side effects.
 
 ---
 
@@ -173,8 +175,8 @@ Sessions are always written to Room first. A `WorkManager` `OneTimeWorkRequest` 
 **Sensor monitoring in ViewModel scope**  
 Sensor collection runs in `viewModelScope` for simplicity. This is a known trade-off: the OS may kill the session if the app is backgrounded for an extended period. A `ForegroundService` is the correct long-term solution (tracked in the roadmap).
 
-**MVI for Login, MVVM for Home/History**  
-Login has a strict request→response lifecycle (idle → loading → success/error) which maps naturally to MVI's unidirectional flow and explicit `Effect` for one-time navigation. Home and History have more continuous, evolving state that is well-served by MVVM with a `StateFlow` and a side-effect `Channel`.
+**MVI for all screens via `BaseMviViewModel`**  
+All screens share a common `BaseMviViewModel<S, I, E>` base class that exposes `state: StateFlow<S>` and `effects: Flow<E>`. Screens dispatch user actions as typed intents to a single `handleIntent()` entry point, making state transitions explicit and testable. `HistoryViewModel` is a read-only variant that uses `Nothing` for its intent and effect types — screens without user interactions don't need `handleIntent()`.
 
 **Anonymous-to-Google account linking**  
 When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts `linkWithCredential`. If the Google account already exists (`FirebaseAuthUserCollisionException`), it falls back to a direct `signInWithCredential`, preserving a seamless UX.
