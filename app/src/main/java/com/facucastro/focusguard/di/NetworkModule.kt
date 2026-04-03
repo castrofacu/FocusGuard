@@ -1,5 +1,6 @@
 package com.facucastro.focusguard.di
 
+import com.facucastro.focusguard.BuildConfig
 import com.facucastro.focusguard.data.remote.api.FocusRetrofitApi
 import dagger.Module
 import dagger.Provides
@@ -15,14 +16,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://api.focusguard.example.com/"
-
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(
             HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
+                        else HttpLoggingInterceptor.Level.NONE
             }
         )
         .build()
@@ -30,7 +30,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

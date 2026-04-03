@@ -6,8 +6,6 @@ import com.facucastro.focusguard.BuildConfig
 import com.facucastro.focusguard.data.auth.GoogleCredentialDataSource
 import com.facucastro.focusguard.data.local.LocalSessionDataSource
 import com.facucastro.focusguard.data.local.RoomSessionDataSource
-import com.facucastro.focusguard.data.remote.FakeFocusApiServiceImpl
-import com.facucastro.focusguard.data.remote.FocusApiService
 import com.facucastro.focusguard.data.repository.AuthRepositoryImpl
 import com.facucastro.focusguard.data.repository.FocusRepositoryImpl
 import com.facucastro.focusguard.data.time.SystemTimeProvider
@@ -36,10 +34,6 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindFocusRepository(impl: FocusRepositoryImpl): FocusRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindFocusApiService(impl: FakeFocusApiServiceImpl): FocusApiService
 
     @Binds
     @Singleton

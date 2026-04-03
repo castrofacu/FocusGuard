@@ -5,7 +5,6 @@ import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Fake implementation of FocusApiService for development purposes
 @Singleton
 class FakeFocusApiServiceImpl @Inject constructor() : FocusApiService {
 

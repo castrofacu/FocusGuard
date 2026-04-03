@@ -33,6 +33,19 @@ android {
         )
     }
 
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "BASE_URL", "\"https://dev-api.focusguard.example.com/\"")
+        }
+        create("prod") {
+            dimension = "env"
+            buildConfigField("String", "BASE_URL", "\"https://api.focusguard.example.com/\"")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
