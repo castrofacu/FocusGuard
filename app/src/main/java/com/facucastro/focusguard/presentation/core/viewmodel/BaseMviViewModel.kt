@@ -19,7 +19,7 @@ abstract class BaseMviViewModel<S, I, E>(initialState: S) : ViewModel() {
     private val _effects = Channel<E>(Channel.BUFFERED)
     val effects: Flow<E> = _effects.receiveAsFlow()
 
-\    abstract fun handleIntent(intent: I)
+    abstract fun handleIntent(intent: I)
 
     protected fun setState(reducer: S.() -> S) {
         _state.update(reducer)

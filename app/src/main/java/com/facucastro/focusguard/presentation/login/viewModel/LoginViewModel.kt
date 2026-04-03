@@ -1,17 +1,14 @@
 package com.facucastro.focusguard.presentation.login.viewModel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.facucastro.focusguard.domain.usecase.GetGoogleIdTokenUseCase
 import com.facucastro.focusguard.domain.usecase.SignInAnonymouslyUseCase
 import com.facucastro.focusguard.domain.usecase.SignInWithGoogleUseCase
-import com.facucastro.focusguard.presentation.login.contract.LoginContract
+import com.facucastro.focusguard.presentation.core.viewmodel.BaseMviViewModel
+import com.facucastro.focusguard.presentation.login.contract.LoginEffect
+import com.facucastro.focusguard.presentation.login.contract.LoginIntent
+import com.facucastro.focusguard.presentation.login.contract.LoginState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,17 +17,11 @@ class LoginViewModel @Inject constructor(
     private val getGoogleIdToken: GetGoogleIdTokenUseCase,
     private val signInWithGoogle: SignInWithGoogleUseCase,
     private val signInAnonymously: SignInAnonymouslyUseCase
-) : ViewModel() {
+) : BaseMviViewModel<LoginState, LoginIntent, LoginEffect>(LoginState.Idle) {
 
-    private val _viewState = MutableStateFlow<LoginContract.State>(LoginContract.State.Idle)
-    val viewState: StateFlow<LoginContract.State> = _viewState.asStateFlow()
-
-    private val _effect = Channel<LoginContract.Effect>(Channel.BUFFERED)
-    val effect = _effect.receiveAsFlow()
-
-    fun handleIntent(intent: LoginContract.Intent) {
+    override fun handleIntent(intent: LoginIntent) {
         when (intent) {
-            LoginContract.Intent.SignInWithGoogleClicked -> {
+            LoginIntent.SignInWithGoogleClicked -> {
                 performSignIn {
                     getGoogleIdToken()
                         .mapCatching { token ->
@@ -38,25 +29,25 @@ class LoginViewModel @Inject constructor(
                         }
                 }
             }
-            LoginContract.Intent.SignInAnonymously -> {
+            LoginIntent.SignInAnonymously -> {
                 performSignIn { signInAnonymously() }
             }
         }
     }
 
     private fun performSignIn(signInBlock: suspend () -> Result<Unit>) {
-        if (_viewState.value is LoginContract.State.Loading) return
+        if (state.value is LoginState.Loading) return
 
-        _viewState.value = LoginContract.State.Loading
+        setState { LoginState.Loading }
         viewModelScope.launch {
             val result = signInBlock()
 
             if (result.isSuccess) {
-                _viewState.value = LoginContract.State.Idle
-                _effect.send(LoginContract.Effect.NavigateToHome)
+                setState { LoginState.Idle }
+                sendEffect(LoginEffect.NavigateToHome)
             } else {
                 val message = result.exceptionOrNull()?.message ?: "Unknown error"
-                _viewState.value = LoginContract.State.Error(message)
+                setState { LoginState.Error(message) }
             }
         }
     }
