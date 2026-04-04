@@ -46,7 +46,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 - **Session History** — Grouped, annotated list of past sessions with per-session stats (duration, distraction count) and an at-a-glance summary header (total sessions, total focus minutes, avg distractions)
 - **Offline-First Sync** — Sessions saved to Room immediately; background WorkManager job syncs to remote API whenever connectivity is available
 - **Firebase Authentication** — Anonymous sign-in out of the box; optional upgrade to a full Google account with account-linking support
-- **Mixed UI Patterns** — All screens use **MVI** via a shared `BaseMviViewModel<S, I, E>`: `LoginViewModel` and `HomeViewModel` expose `handleIntent()`; `HistoryViewModel` is a read-only variant with no intents or effects
+- **MVI Pattern** — All screens use **MVI** via a shared `BaseMviViewModel<S, I, E>`: `LoginViewModel` and `HomeViewModel` expose `handleIntent()`; `HistoryViewModel` is a read-only variant with no intents or effects
 
 ---
 
