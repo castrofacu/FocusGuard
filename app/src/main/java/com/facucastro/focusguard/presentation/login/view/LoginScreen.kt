@@ -37,7 +37,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.facucastro.focusguard.presentation.core.component.FocusGuardButton
 import com.facucastro.focusguard.presentation.core.component.FocusGuardButtonVariant
 import com.facucastro.focusguard.presentation.core.component.LoadingComponent
-import com.facucastro.focusguard.presentation.login.contract.LoginContract
+import com.facucastro.focusguard.presentation.login.contract.LoginEffect
+import com.facucastro.focusguard.presentation.login.contract.LoginIntent
+import com.facucastro.focusguard.presentation.login.contract.LoginState
 import com.facucastro.focusguard.presentation.login.viewModel.LoginViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -46,10 +48,10 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel(),
 ) {
-    val viewState by viewModel.viewState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val errorMessage = (viewState as? LoginContract.State.Error)?.message
+    val errorMessage = (state as? LoginState.Error)?.message
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             snackbarHostState.showSnackbar(errorMessage)
@@ -57,9 +59,9 @@ fun LoginScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collectLatest { effect ->
+        viewModel.effects.collectLatest { effect ->
             when (effect) {
-                LoginContract.Effect.NavigateToHome -> {
+                LoginEffect.NavigateToHome -> {
                     // Handled in MainActivity
                 }
             }
@@ -72,12 +74,12 @@ fun LoginScreen(
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             LoginContent(
-                isLoading = viewState is LoginContract.State.Loading,
-                onGoogleClick = { viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked) },
-                onAnonymousClick = { viewModel.handleIntent(LoginContract.Intent.SignInAnonymously) },
+                isLoading = state is LoginState.Loading,
+                onGoogleClick = { viewModel.handleIntent(LoginIntent.SignInWithGoogleClicked) },
+                onAnonymousClick = { viewModel.handleIntent(LoginIntent.SignInAnonymously) },
             )
 
-            if (viewState is LoginContract.State.Loading) {
+            if (state is LoginState.Loading) {
                 LoadingComponent(modifier = Modifier.fillMaxSize())
             }
         }

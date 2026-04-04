@@ -1,6 +1,8 @@
 package com.facucastro.focusguard.tests.presentation.history.viewModel
 
-import com.facucastro.focusguard.presentation.history.state.HistoryUiState
+import com.facucastro.focusguard.presentation.history.contract.DateLabel
+import com.facucastro.focusguard.presentation.history.contract.HistoryState
+import com.facucastro.focusguard.presentation.history.contract.SessionGroup
 import com.facucastro.focusguard.presentation.history.viewModel.HistoryViewModel
 import com.facucastro.focusguard.providers.presentation.history.viewModel.OLDER_MILLIS
 import com.facucastro.focusguard.providers.presentation.history.viewModel.TODAY_MILLIS
@@ -37,7 +39,7 @@ class HistoryViewModelTest {
 
             // THEN
             Assert.assertEquals(
-                HistoryUiState(isLoading = true, zoneId = ZoneId.of("UTC")),
+                HistoryState(isLoading = true, zoneId = ZoneId.of("UTC")),
                 viewModel.uiState.value
             )
         }
@@ -55,7 +57,7 @@ class HistoryViewModelTest {
 
             // THEN
             Assert.assertFalse(finalState.isLoading)
-            Assert.assertEquals(emptyList<HistoryUiState.SessionGroup>(), finalState.sessionGroups)
+            Assert.assertEquals(emptyList<SessionGroup>(), finalState.sessionGroups)
             Assert.assertEquals(0, finalState.totalSessions)
             Assert.assertEquals(0, finalState.totalFocusMinutes)
             Assert.assertEquals(0f, finalState.avgDistractions)
@@ -74,7 +76,7 @@ class HistoryViewModelTest {
         val group = viewModel.uiState.value.sessionGroups.single()
 
         // THEN
-        Assert.assertEquals(HistoryUiState.DateLabel.Today, group.dateLabel)
+        Assert.assertEquals(DateLabel.Today, group.dateLabel)
     }
 
     @Test
@@ -90,7 +92,7 @@ class HistoryViewModelTest {
         val group = viewModel.uiState.value.sessionGroups.single()
 
         // THEN
-        Assert.assertEquals(HistoryUiState.DateLabel.Yesterday, group.dateLabel)
+        Assert.assertEquals(DateLabel.Yesterday, group.dateLabel)
     }
 
     @Test
@@ -108,7 +110,7 @@ class HistoryViewModelTest {
 
             // THEN
             Assert.assertEquals(
-                HistoryUiState.DateLabel.Other(LocalDate.of(2024, 4, 7)),
+                DateLabel.Other(LocalDate.of(2024, 4, 7)),
                 group.dateLabel
             )
         }
@@ -131,10 +133,10 @@ class HistoryViewModelTest {
 
             // THEN
             Assert.assertEquals(3, groups.size)
-            Assert.assertEquals(HistoryUiState.DateLabel.Today, groups[0].dateLabel)
-            Assert.assertEquals(HistoryUiState.DateLabel.Yesterday, groups[1].dateLabel)
+            Assert.assertEquals(DateLabel.Today, groups[0].dateLabel)
+            Assert.assertEquals(DateLabel.Yesterday, groups[1].dateLabel)
             Assert.assertEquals(
-                HistoryUiState.DateLabel.Other(LocalDate.of(2024, 4, 7)),
+                DateLabel.Other(LocalDate.of(2024, 4, 7)),
                 groups[2].dateLabel
             )
         }

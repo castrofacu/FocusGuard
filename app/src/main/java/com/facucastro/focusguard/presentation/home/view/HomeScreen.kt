@@ -11,7 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.facucastro.focusguard.presentation.home.state.HomeEvent
+import com.facucastro.focusguard.presentation.home.contract.HomeEffect
+import com.facucastro.focusguard.presentation.home.contract.HomeIntent
 import com.facucastro.focusguard.presentation.home.viewModel.HomeViewModel
 
 @Composable
@@ -20,7 +21,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -31,13 +32,13 @@ fun HomeScreen(
             } else {
                 true
             }
-        viewModel.onPermissionsResult(isNotificationGranted)
+        viewModel.handleIntent(HomeIntent.PermissionsResult(isNotificationGranted))
     }
 
     LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            when (event) {
-                HomeEvent.RequestPermissions -> {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                HomeEffect.RequestPermissions -> {
                     val permissionsToRequest = buildList {
                         add(Manifest.permission.RECORD_AUDIO)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -46,20 +47,20 @@ fun HomeScreen(
                     }.toTypedArray()
                     permissionLauncher.launch(permissionsToRequest)
                 }
-                HomeEvent.FailedToSaveSession ->
+                HomeEffect.FailedToSaveSession ->
                     snackbarHostState.showSnackbar("Failed to save session")
-                HomeEvent.NotificationsPermissionDenied ->
+                HomeEffect.NotificationsPermissionDenied ->
                     snackbarHostState.showSnackbar("Notifications permission denied")
             }
         }
     }
 
     HomeContent(
-        uiState = uiState,
+        state = state,
         modifier = modifier,
-        onStartClicked = viewModel::onStartClicked,
-        onPauseClicked = viewModel::onPauseClicked,
-        onResumeClicked = viewModel::onResumeClicked,
-        onStopClicked = viewModel::onStopClicked,
+        onStartClicked = { viewModel.handleIntent(HomeIntent.StartClicked) },
+        onPauseClicked = { viewModel.handleIntent(HomeIntent.PauseClicked) },
+        onResumeClicked = { viewModel.handleIntent(HomeIntent.ResumeClicked) },
+        onStopClicked = { viewModel.handleIntent(HomeIntent.StopClicked) },
     )
 }

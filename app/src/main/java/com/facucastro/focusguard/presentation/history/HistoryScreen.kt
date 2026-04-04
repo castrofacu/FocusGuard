@@ -14,5 +14,5 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HistoryContent(uiState = uiState, modifier = modifier)
+    HistoryContent(state = uiState, modifier = modifier)
 }

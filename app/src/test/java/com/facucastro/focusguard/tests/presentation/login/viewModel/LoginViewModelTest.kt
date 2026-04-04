@@ -1,6 +1,8 @@
 package com.facucastro.focusguard.tests.presentation.login.viewModel
 
-import com.facucastro.focusguard.presentation.login.contract.LoginContract
+import com.facucastro.focusguard.presentation.login.contract.LoginEffect
+import com.facucastro.focusguard.presentation.login.contract.LoginIntent
+import com.facucastro.focusguard.presentation.login.contract.LoginState
 import com.facucastro.focusguard.providers.presentation.login.viewModel.providesLoginViewModel
 import com.facucastro.focusguard.utils.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,7 +24,7 @@ class LoginViewModelTest {
     @Test
     fun `GIVEN viewModel WHEN initialized THEN state is Idle`() = runTest {
         val viewModel = providesLoginViewModel()
-        Assert.assertEquals(LoginContract.State.Idle, viewModel.viewState.value)
+        Assert.assertEquals(LoginState.Idle, viewModel.state.value)
     }
 
     @Test
@@ -32,16 +34,16 @@ class LoginViewModelTest {
             val viewModel = providesLoginViewModel(
                 signInAnonymouslyResult = Result.success(Unit)
             )
-            val effects = mutableListOf<LoginContract.Effect>()
-            val job = launch { viewModel.effect.toList(effects) }
+            val effects = mutableListOf<LoginEffect>()
+            val job = launch { viewModel.effects.toList(effects) }
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInAnonymously)
+            viewModel.handleIntent(LoginIntent.SignInAnonymously)
             runCurrent()
 
             // THEN
-            Assert.assertEquals(LoginContract.State.Idle, viewModel.viewState.value)
-            Assert.assertEquals(listOf(LoginContract.Effect.NavigateToHome), effects)
+            Assert.assertEquals(LoginState.Idle, viewModel.state.value)
+            Assert.assertEquals(listOf(LoginEffect.NavigateToHome), effects)
             job.cancel()
         }
 
@@ -55,14 +57,14 @@ class LoginViewModelTest {
             )
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInAnonymously)
+            viewModel.handleIntent(LoginIntent.SignInAnonymously)
             runCurrent()
 
             // THEN
-            Assert.assertTrue(viewModel.viewState.value is LoginContract.State.Error)
+            Assert.assertTrue(viewModel.state.value is LoginState.Error)
             Assert.assertEquals(
                 errorMessage,
-                (viewModel.viewState.value as LoginContract.State.Error).message
+                (viewModel.state.value as LoginState.Error).message
             )
         }
 
@@ -74,16 +76,16 @@ class LoginViewModelTest {
                 idTokenResult = Result.success("valid_token"),
                 signInWithGoogleResult = Result.success(Unit)
             )
-            val effects = mutableListOf<LoginContract.Effect>()
-            val job = launch { viewModel.effect.toList(effects) }
+            val effects = mutableListOf<LoginEffect>()
+            val job = launch { viewModel.effects.toList(effects) }
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked)
+            viewModel.handleIntent(LoginIntent.SignInWithGoogleClicked)
             runCurrent()
 
             // THEN
-            Assert.assertEquals(LoginContract.State.Idle, viewModel.viewState.value)
-            Assert.assertEquals(listOf(LoginContract.Effect.NavigateToHome), effects)
+            Assert.assertEquals(LoginState.Idle, viewModel.state.value)
+            Assert.assertEquals(listOf(LoginEffect.NavigateToHome), effects)
             job.cancel()
         }
 
@@ -97,14 +99,14 @@ class LoginViewModelTest {
             )
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked)
+            viewModel.handleIntent(LoginIntent.SignInWithGoogleClicked)
             runCurrent()
 
             // THEN
-            Assert.assertTrue(viewModel.viewState.value is LoginContract.State.Error)
+            Assert.assertTrue(viewModel.state.value is LoginState.Error)
             Assert.assertEquals(
                 errorMessage,
-                (viewModel.viewState.value as LoginContract.State.Error).message
+                (viewModel.state.value as LoginState.Error).message
             )
         }
 
@@ -118,14 +120,14 @@ class LoginViewModelTest {
             )
 
             // WHEN
-            viewModel.handleIntent(LoginContract.Intent.SignInWithGoogleClicked)
+            viewModel.handleIntent(LoginIntent.SignInWithGoogleClicked)
             runCurrent()
 
             // THEN
-            Assert.assertTrue(viewModel.viewState.value is LoginContract.State.Error)
+            Assert.assertTrue(viewModel.state.value is LoginState.Error)
             Assert.assertEquals(
                 errorMessage,
-                (viewModel.viewState.value as LoginContract.State.Error).message
+                (viewModel.state.value as LoginState.Error).message
             )
         }
 }

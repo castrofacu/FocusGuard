@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.facucastro.focusguard.domain.model.SessionStatus
-import com.facucastro.focusguard.presentation.home.state.HomeUiState
+import com.facucastro.focusguard.presentation.home.contract.HomeState
 import com.facucastro.focusguard.presentation.home.view.component.DistractionEventCard
 import com.facucastro.focusguard.presentation.home.view.component.SessionControls
 import com.facucastro.focusguard.presentation.home.view.component.ShieldOrb
@@ -30,7 +30,7 @@ import com.facucastro.focusguard.presentation.home.view.component.TimerDisplay
 
 @Composable
 fun HomeContent(
-    uiState: HomeUiState,
+    state: HomeState,
     modifier: Modifier = Modifier,
     onStartClicked: () -> Unit,
     onPauseClicked: () -> Unit,
@@ -45,16 +45,16 @@ fun HomeContent(
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         ShieldOrb(
-            isActive = uiState.status is SessionStatus.Running,
+            isActive = state.status is SessionStatus.Running,
         )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            TimerDisplay(elapsedSeconds = uiState.elapsedSeconds)
+            TimerDisplay(elapsedSeconds = state.elapsedSeconds)
             Text(
-                text = when (uiState.status) {
+                text = when (state.status) {
                     is SessionStatus.Idle -> "READY TO DEFEND"
                     is SessionStatus.Running -> "DEFENDING"
                     is SessionStatus.Paused -> "SHIELD PAUSED"
@@ -76,7 +76,7 @@ fun HomeContent(
                 icon = Icons.Filled.Bolt,
                 iconTint = MaterialTheme.colorScheme.error,
                 label = "Distractions",
-                value = uiState.distractionCount.toString(),
+                value = state.distractionCount.toString(),
                 subtitle = "Breaches today",
                 modifier = Modifier.weight(1f),
             )
@@ -84,18 +84,18 @@ fun HomeContent(
                 icon = Icons.Filled.Shield,
                 iconTint = MaterialTheme.colorScheme.secondary,
                 label = "Strength",
-                value = "${uiState.shieldStrength}%",
+                value = "${state.shieldStrength}%",
                 subtitle = "Fortified status",
                 modifier = Modifier.weight(1f),
             )
         }
 
-        uiState.lastDistractionEvent?.let {
+        state.lastDistractionEvent?.let {
             DistractionEventCard(event = it)
         } ?: Spacer(Modifier.height(0.dp))
 
         SessionControls(
-            status = uiState.status,
+            status = state.status,
             onStartClicked = onStartClicked,
             onPauseClicked = onPauseClicked,
             onResumeClicked = onResumeClicked,

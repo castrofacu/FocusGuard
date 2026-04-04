@@ -15,19 +15,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.facucastro.focusguard.presentation.core.component.LoadingComponent
-import com.facucastro.focusguard.presentation.history.state.HistoryUiState
+import com.facucastro.focusguard.presentation.history.contract.DateLabel
+import com.facucastro.focusguard.presentation.history.contract.HistoryState
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
+fun HistoryContent(state: HistoryState, modifier: Modifier = Modifier) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("EEE, d MMM", Locale.getDefault()) }
 
     when {
-        uiState.isLoading -> {
+        state.isLoading -> {
             LoadingComponent(modifier = Modifier.fillMaxSize())
         }
-        uiState.sessionGroups.isEmpty() -> {
+        state.sessionGroups.isEmpty() -> {
             HistoryEmptyState(modifier = modifier)
         }
         else -> {
@@ -53,32 +54,32 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
 
                 item(key = "summary_header") {
                     HistorySummaryHeader(
-                        totalSessions = uiState.totalSessions,
-                        totalFocusMinutes = uiState.totalFocusMinutes,
-                        totalDistractions = uiState.totalDistractions,
+                        totalSessions = state.totalSessions,
+                        totalFocusMinutes = state.totalFocusMinutes,
+                        totalDistractions = state.totalDistractions,
                         modifier = Modifier.padding(bottom = 12.dp),
                     )
                 }
 
                 item(key = "chart") {
                     ShieldStrengthChart(
-                        weeklyMinutesByDay = uiState.weeklyMinutesByDay,
+                        weeklyMinutesByDay = state.weeklyMinutesByDay,
                         modifier = Modifier.padding(bottom = 20.dp),
                     )
                 }
 
-                uiState.sessionGroups.forEach { group ->
+                state.sessionGroups.forEach { group ->
                     val dateKey = when (val dl = group.dateLabel) {
-                        HistoryUiState.DateLabel.Today -> "today"
-                        HistoryUiState.DateLabel.Yesterday -> "yesterday"
-                        is HistoryUiState.DateLabel.Other -> dl.date.toString()
+                        DateLabel.Today -> "today"
+                        DateLabel.Yesterday -> "yesterday"
+                        is DateLabel.Other -> dl.date.toString()
                     }
 
                     item(key = "header_$dateKey") {
                         val label = when (val dl = group.dateLabel) {
-                            HistoryUiState.DateLabel.Today -> "Today"
-                            HistoryUiState.DateLabel.Yesterday -> "Yesterday"
-                            is HistoryUiState.DateLabel.Other -> dl.date.format(dateFormatter)
+                            DateLabel.Today -> "Today"
+                            DateLabel.Yesterday -> "Yesterday"
+                            is DateLabel.Other -> dl.date.format(dateFormatter)
                         }
                         Text(
                             text = label.uppercase(),
@@ -95,7 +96,7 @@ fun HistoryContent(uiState: HistoryUiState, modifier: Modifier = Modifier) {
                     ) { session ->
                         HistorySessionCard(
                             session = session,
-                            zoneId = uiState.zoneId,
+                            zoneId = state.zoneId,
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }
