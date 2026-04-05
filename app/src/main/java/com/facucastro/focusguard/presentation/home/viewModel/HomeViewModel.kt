@@ -1,35 +1,32 @@
 package com.facucastro.focusguard.presentation.home.viewModel
 
+import androidx.lifecycle.viewModelScope
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.model.SessionStatus
-import com.facucastro.focusguard.domain.sensor.DistractionMonitor
+import com.facucastro.focusguard.domain.usecase.FocusTimerUseCase
+import com.facucastro.focusguard.domain.usecase.ObserveDistractionsUseCase
 import com.facucastro.focusguard.domain.usecase.StartFocusSessionUseCase
 import com.facucastro.focusguard.domain.usecase.StopFocusSessionUseCase
-import com.facucastro.focusguard.notification.FocusNotificationManager
-import androidx.lifecycle.viewModelScope
 import com.facucastro.focusguard.presentation.core.viewmodel.BaseMviViewModel
 import com.facucastro.focusguard.presentation.home.contract.HomeEffect
 import com.facucastro.focusguard.presentation.home.contract.HomeIntent
 import com.facucastro.focusguard.presentation.home.contract.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val distractionMonitor: DistractionMonitor,
     private val startFocusSessionUseCase: StartFocusSessionUseCase,
     private val stopFocusSessionUseCase: StopFocusSessionUseCase,
-    private val focusNotificationManager: FocusNotificationManager,
+    private val focusTimerUseCase: FocusTimerUseCase,
+    private val observeDistractionsUseCase: ObserveDistractionsUseCase,
 ) : BaseMviViewModel<HomeState, HomeIntent, HomeEffect>(HomeState()) {
 
     private var activeSession: FocusSession? = null
     private var timerJob: Job? = null
-    private var sensorJob: Job? = null
-    private var notificationJob: Job? = null
+    private var monitorJob: Job? = null
 
     override fun handleIntent(intent: HomeIntent) {
         when (intent) {
@@ -64,31 +61,25 @@ class HomeViewModel @Inject constructor(
             )
         }
 
-        distractionMonitor.start(viewModelScope)
-        startMonitoringJobs()
-        startTimer()
+        startMonitorJob()
+        startTimerJob(requireNotNull(activeSession).startTime)
     }
 
     private fun onPauseClicked() {
         timerJob?.cancel()
-        sensorJob?.cancel()
-        notificationJob?.cancel()
-        distractionMonitor.stop()
+        monitorJob?.cancel()
         setState { copy(status = SessionStatus.Paused, lastDistractionEvent = null) }
     }
 
     private fun onResumeClicked() {
         setState { copy(status = SessionStatus.Running) }
-        distractionMonitor.start(viewModelScope)
-        startMonitoringJobs()
-        startTimer()
+        startMonitorJob()
+        startTimerJob(requireNotNull(activeSession).startTime)
     }
 
     private fun onStopClicked() {
         timerJob?.cancel()
-        sensorJob?.cancel()
-        notificationJob?.cancel()
-        distractionMonitor.stop()
+        monitorJob?.cancel()
 
         val session = activeSession
         val count = state.value.distractionCount
@@ -112,9 +103,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun startMonitoringJobs() {
-        sensorJob = viewModelScope.launch {
-            distractionMonitor.events.collect { event ->
+    private fun startMonitorJob() {
+        monitorJob = viewModelScope.launch {
+            observeDistractionsUseCase().collect { event ->
                 setState {
                     copy(
                         distractionCount = distractionCount + 1,
@@ -123,31 +114,14 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
-
-        notificationJob = viewModelScope.launch {
-            var lastNotifiedAt = 0L
-            distractionMonitor.events.collect { event ->
-                val now = System.currentTimeMillis()
-                if (now - lastNotifiedAt >= 2_000L) {
-                    lastNotifiedAt = now
-                    focusNotificationManager.notifyDistraction(event)
-                }
-            }
-        }
     }
 
-    private fun startTimer() {
+    private fun startTimerJob(startTimeMillis: Long) {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
-            while (isActive) {
-                delay(1_000L)
-                setState { copy(elapsedSeconds = elapsedSeconds + 1) }
+            focusTimerUseCase(startTimeMillis).collect { elapsed ->
+                setState { copy(elapsedSeconds = elapsed) }
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        distractionMonitor.stop()
     }
 }
