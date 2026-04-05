@@ -4,6 +4,9 @@ import android.util.Log
 import com.facucastro.focusguard.domain.model.DistractionEvent
 import com.facucastro.focusguard.domain.sensor.DistractionMonitor
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.merge
@@ -22,11 +25,14 @@ class CompositeDistractionMonitor @Inject constructor(
     private val _events = MutableSharedFlow<DistractionEvent>()
     override val events: SharedFlow<DistractionEvent> = _events
 
-    override fun start(scope: CoroutineScope) {
-        accelerometerMonitor.start(scope)
-        microphoneMonitor.start(scope)
+    private var mergeScope: CoroutineScope? = null
 
-        scope.launch {
+    override fun start() {
+        accelerometerMonitor.start()
+        microphoneMonitor.start()
+
+        mergeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        mergeScope?.launch {
             merge(accelerometerMonitor.events, microphoneMonitor.events)
                 .collect { _events.emit(it) }
         }
@@ -37,6 +43,8 @@ class CompositeDistractionMonitor @Inject constructor(
     override fun stop() {
         accelerometerMonitor.stop()
         microphoneMonitor.stop()
+        mergeScope?.cancel()
+        mergeScope = null
         Log.i(TAG, "Stopped composite monitoring")
     }
 }

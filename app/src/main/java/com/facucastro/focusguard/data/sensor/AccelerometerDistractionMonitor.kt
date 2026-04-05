@@ -10,6 +10,9 @@ import com.facucastro.focusguard.domain.model.DistractionEvent
 import com.facucastro.focusguard.domain.sensor.DistractionMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
@@ -37,8 +40,8 @@ class AccelerometerDistractionMonitor @Inject constructor(
 
     private var emitScope: CoroutineScope? = null
 
-    override fun start(scope: CoroutineScope) {
-        emitScope = scope
+    override fun start() {
+        emitScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         initialized = false
         accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
@@ -48,6 +51,7 @@ class AccelerometerDistractionMonitor @Inject constructor(
 
     override fun stop() {
         sensorManager.unregisterListener(this)
+        emitScope?.cancel()
         emitScope = null
         Log.i(TAG, "Stopped accelerometer monitoring")
     }

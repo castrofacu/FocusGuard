@@ -8,7 +8,9 @@ import com.facucastro.focusguard.domain.model.DistractionEvent
 import com.facucastro.focusguard.domain.sensor.DistractionMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -30,9 +32,9 @@ class MicrophoneDistractionMonitor @Inject constructor(
     override val events: SharedFlow<DistractionEvent> = _events
 
     private var recorder: MediaRecorder? = null
-    private var pollingJob: Job? = null
+    private var monitorScope: CoroutineScope? = null
 
-    override fun start(scope: CoroutineScope) {
+    override fun start() {
         // If recorder setup fails (e.g. RECORD_AUDIO permission denied), the monitor simply
         // produces no events rather than crashing.
         try {
@@ -48,7 +50,8 @@ class MicrophoneDistractionMonitor @Inject constructor(
             return
         }
 
-        pollingJob = scope.launch {
+        monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        monitorScope?.launch {
             while (isActive) {
                 delay(POLL_INTERVAL_MS)
                 val amplitude = recorder?.maxAmplitude ?: break
@@ -67,8 +70,8 @@ class MicrophoneDistractionMonitor @Inject constructor(
     }
 
     override fun stop() {
-        pollingJob?.cancel()
-        pollingJob = null
+        monitorScope?.cancel()
+        monitorScope = null
         recorder?.runCatching {
             stop()
             release()
