@@ -79,7 +79,7 @@ class FocusTimerUseCaseTest {
             }
             repeat(3) {
                 tick++
-                advanceTimeBy(600L)
+                advanceTimeBy(1001L)
             }
 
             // THEN
