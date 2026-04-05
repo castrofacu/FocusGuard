@@ -50,6 +50,7 @@ class MicrophoneDistractionMonitor @Inject constructor(
             return
         }
 
+        monitorScope?.cancel()
         monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         monitorScope?.launch {
             while (isActive) {

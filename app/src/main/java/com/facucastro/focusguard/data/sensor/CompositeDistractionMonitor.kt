@@ -31,6 +31,7 @@ class CompositeDistractionMonitor @Inject constructor(
         accelerometerMonitor.start()
         microphoneMonitor.start()
 
+        mergeScope?.cancel()
         mergeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         mergeScope?.launch {
             merge(accelerometerMonitor.events, microphoneMonitor.events)

@@ -41,6 +41,8 @@ class AccelerometerDistractionMonitor @Inject constructor(
     private var emitScope: CoroutineScope? = null
 
     override fun start() {
+        emitScope?.cancel()
+        sensorManager.unregisterListener(this)
         emitScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         initialized = false
         accelerometer?.let {

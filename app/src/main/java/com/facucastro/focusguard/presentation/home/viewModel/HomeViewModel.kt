@@ -44,6 +44,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun onPermissionsResult(isNotificationGranted: Boolean) {
+        if (state.value.status != SessionStatus.Idle) return
         if (!isNotificationGranted) {
             launchEffect(HomeEffect.NotificationsPermissionDenied)
         }
@@ -72,6 +73,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun onResumeClicked() {
+        if (state.value.status != SessionStatus.Paused) return
         setState { copy(status = SessionStatus.Running) }
         startMonitorJob()
         startTimerJob(requireNotNull(activeSession).startTime)
@@ -104,6 +106,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun startMonitorJob() {
+        monitorJob?.cancel()
         monitorJob = viewModelScope.launch {
             observeDistractionsUseCase().collect { event ->
                 setState {

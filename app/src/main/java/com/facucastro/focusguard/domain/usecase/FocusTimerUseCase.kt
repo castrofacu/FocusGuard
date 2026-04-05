@@ -11,7 +11,7 @@ open class FocusTimerUseCase @Inject constructor(
 ) {
     open operator fun invoke(startTimeMillis: Long): Flow<Int> = flow {
         while (true) {
-            delay(500L)
+            delay(1000L)
             val elapsed = (timeProvider.getCurrentTimeMillis() - startTimeMillis) / 1000
             emit(elapsed.toInt())
         }
