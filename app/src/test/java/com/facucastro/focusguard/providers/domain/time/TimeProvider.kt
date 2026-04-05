@@ -15,3 +15,9 @@ fun providesFakeTimeProvider(
 
     override fun getZoneId(): ZoneId = zoneToReturn
 }
+
+class StepTimeProvider(initialMillis: Long = 0L) : TimeProvider {
+    var now: Long = initialMillis
+    override fun getCurrentTimeMillis(): Long = now
+    override fun getZoneId(): ZoneId = ZoneId.of("UTC")
+}
