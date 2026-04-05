@@ -64,9 +64,11 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 ┌────────────────────────────▼────────────────────────────┐
 │                          Domain                         │
 │  StartFocusSessionUseCase  │  StopFocusSessionUseCase   │
+│  FocusTimerUseCase         │  ObserveDistractionsUseCase│
 │  GetHistoryUseCase         │  Auth Use Cases (×4)       │
 │  FocusRepository (i/f)     │  DistractionMonitor (i/f)  │
 │  AuthRepository (i/f)      │  TimeProvider (i/f)        │
+│  DistractionNotifier (i/f) │                            │
 └────────────────────────────┬────────────────────────────┘
                              │ Implementations
 ┌────────────────────────────▼────────────────────────────┐
@@ -78,6 +80,7 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 │  MediaRecorder (MicrophoneDistractionMonitor)           │
 │  Firebase Auth (AuthRepositoryImpl)                     │
 │  CredentialManager (GoogleCredentialDataSource)         │
+│  FocusNotificationManager (→ DistractionNotifier)       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -172,8 +175,8 @@ Or open the project in Android Studio and run the `app` configuration on a devic
 **Offline-first sync**  
 Sessions are always written to Room first. A `WorkManager` `OneTimeWorkRequest` with `NetworkType.CONNECTED` constraint and exponential backoff is enqueued after every save, guaranteeing sync even if the device is offline at the time of the session.
 
-**Sensor monitoring in ViewModel scope**  
-Sensor collection runs in `viewModelScope` for simplicity. This is a known trade-off: the OS may kill the session if the app is backgrounded for an extended period. A `ForegroundService` is the correct long-term solution (tracked in the roadmap).
+**Sensor lifecycle owned by `ObserveDistractionsUseCase`**
+`DistractionMonitor.start()` / `stop()` are called inside `ObserveDistractionsUseCase` using Flow's `onStart` / `onCompletion` operators. This keeps the ViewModel free of any direct sensor dependency — it only holds a reference to the use case. The ViewModel cancels the collecting job (and thus triggers `onCompletion → stop()`) when pausing or stopping the session. A `ForegroundService` is the correct long-term solution for background monitoring (tracked in the roadmap).
 
 **MVI for all screens via `BaseMviViewModel`**  
 All screens share a common `BaseMviViewModel<S, I, E>` base class that exposes `state: StateFlow<S>` and `effects: Flow<E>`. Screens dispatch user actions as typed intents to a single `handleIntent()` entry point, making state transitions explicit and testable. `HistoryViewModel` is a read-only variant that uses `Nothing` for its intent and effect types — screens without user interactions don't need `handleIntent()`.
