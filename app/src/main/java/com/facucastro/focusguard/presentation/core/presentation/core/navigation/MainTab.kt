@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.navigation
+package com.facucastro.focusguard.presentation.core.presentation.core.navigation
 
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable

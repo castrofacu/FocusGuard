@@ -28,9 +28,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.facucastro.focusguard.navigation.AppRoute
-import com.facucastro.focusguard.navigation.MainTab
-import com.facucastro.focusguard.navigation.TopLevelBackStack
+import com.facucastro.focusguard.presentation.core.presentation.core.navigation.AppRoute
+import com.facucastro.focusguard.presentation.core.presentation.core.navigation.MainTab
+import com.facucastro.focusguard.presentation.core.presentation.core.navigation.TopLevelBackStack
 import com.facucastro.focusguard.presentation.core.theme.FocusGuardTheme
 import com.facucastro.focusguard.presentation.history.HistoryScreen
 import com.facucastro.focusguard.presentation.home.view.HomeScreen

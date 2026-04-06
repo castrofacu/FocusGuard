@@ -1,4 +1,4 @@
-package com.facucastro.focusguard.navigation
+package com.facucastro.focusguard.presentation.core.presentation.core.navigation
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
