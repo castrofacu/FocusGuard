@@ -102,6 +102,7 @@ All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract
 |----------|------------|
 | Language | Kotlin |
 | UI | Jetpack Compose + Material 3 |
+| Navigation | Navigation 3 |
 | Architecture | Clean Architecture, MVVM, MVI |
 | DI | Hilt |
 | Async | Coroutines + Flow |
@@ -181,6 +182,9 @@ Sessions are always written to Room first. A `WorkManager` `OneTimeWorkRequest` 
 **MVI for all screens via `BaseMviViewModel`**  
 All screens share a common `BaseMviViewModel<S, I, E>` base class that exposes `state: StateFlow<S>` and `effects: Flow<E>`. Screens dispatch user actions as typed intents to a single `handleIntent()` entry point, making state transitions explicit and testable. `HistoryViewModel` is a read-only variant that uses `Nothing` for its intent and effect types — screens without user interactions don't need `handleIntent()`.
 
+**Navigation 3 with two-level back-stack structure**  
+Navigation uses `androidx.navigation3`, following the official "Common UI" recipe. The outer `NavDisplay` (driven by `rememberNavBackStack`) has exactly two entries: `AppRoute.Login` and `AppRoute.Main`. The `Scaffold` and `NavigationBar` live inside the `AppRoute.Main` entry and are therefore **never animated** — they stay static while a second, inner `NavDisplay` driven by `TopLevelBackStack<MainTab>` animates only the tab content. Each tab (`MainTab.Home`, `MainTab.History`) owns an independent back stack inside `TopLevelBackStack`, enabling per-tab deep navigation with correct back-press behaviour. `LoginEffect.NavigateToHome` drives post-login navigation directly via the `LoginScreen`'s `onNavigateToHome` callback; `MainViewModel.isUserLoggedIn` handles the "already signed in at launch" and "signed out" cases.
+
 **Anonymous-to-Google account linking**  
 When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts `linkWithCredential`. If the Google account already exists (`FirebaseAuthUserCollisionException`), it falls back to a direct `signInWithCredential`, preserving a seamless UX.
 
@@ -192,6 +196,5 @@ When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts
 ## Roadmap
 
 - [ ] Migrate sensor collection to a bound `ForegroundService`
-- [ ] Adopt Navigation Compose with a proper `NavHost`
 - [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl`)
 - [ ] Pomodoro-style configurable intervals

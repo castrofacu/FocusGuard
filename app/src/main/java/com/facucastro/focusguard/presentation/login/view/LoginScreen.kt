@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun LoginScreen(
+    onNavigateToHome: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel(),
 ) {
@@ -61,9 +62,7 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collectLatest { effect ->
             when (effect) {
-                LoginEffect.NavigateToHome -> {
-                    // Handled in MainActivity
-                }
+                LoginEffect.NavigateToHome -> onNavigateToHome()
             }
         }
     }
