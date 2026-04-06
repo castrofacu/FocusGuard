@@ -3,6 +3,8 @@ package com.facucastro.focusguard.presentation.home.viewModel
 import androidx.lifecycle.viewModelScope
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.model.SessionStatus
+import com.facucastro.focusguard.domain.timer.FocusSessionTimer
+import com.facucastro.focusguard.domain.timer.FocusSessionTimerFactory
 import com.facucastro.focusguard.domain.usecase.FocusTimerUseCase
 import com.facucastro.focusguard.domain.usecase.ObserveDistractionsUseCase
 import com.facucastro.focusguard.domain.usecase.StartFocusSessionUseCase
@@ -22,9 +24,11 @@ class HomeViewModel @Inject constructor(
     private val stopFocusSessionUseCase: StopFocusSessionUseCase,
     private val focusTimerUseCase: FocusTimerUseCase,
     private val observeDistractionsUseCase: ObserveDistractionsUseCase,
+    private val timerFactory: FocusSessionTimerFactory,
 ) : BaseMviViewModel<HomeState, HomeIntent, HomeEffect>(HomeState()) {
 
     private var activeSession: FocusSession? = null
+    private var sessionTimer: FocusSessionTimer? = null
     private var timerJob: Job? = null
     private var monitorJob: Job? = null
 
@@ -53,6 +57,7 @@ class HomeViewModel @Inject constructor(
 
     private fun startSession() {
         activeSession = startFocusSessionUseCase()
+        sessionTimer = timerFactory.create(startTimeMillis = requireNotNull(activeSession).startTime)
         setState {
             copy(
                 status = SessionStatus.Running,
@@ -63,25 +68,26 @@ class HomeViewModel @Inject constructor(
         }
 
         startMonitorJob()
-        startTimerJob(requireNotNull(activeSession).startTime)
+        startTimerJob(requireNotNull(sessionTimer))
     }
 
     private fun onPauseClicked() {
-        timerJob?.cancel()
+        sessionTimer?.pause()
         monitorJob?.cancel()
         setState { copy(status = SessionStatus.Paused, lastDistractionEvent = null) }
     }
 
     private fun onResumeClicked() {
         if (state.value.status != SessionStatus.Paused) return
+        sessionTimer?.resume()
         setState { copy(status = SessionStatus.Running) }
         startMonitorJob()
-        startTimerJob(requireNotNull(activeSession).startTime)
     }
 
     private fun onStopClicked() {
         timerJob?.cancel()
         monitorJob?.cancel()
+        sessionTimer = null
 
         val session = activeSession
         val count = state.value.distractionCount
@@ -119,10 +125,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun startTimerJob(startTimeMillis: Long) {
+    private fun startTimerJob(timer: FocusSessionTimer) {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
-            focusTimerUseCase(startTimeMillis).collect { elapsed ->
+            focusTimerUseCase(timer).collect { elapsed ->
                 setState { copy(elapsedSeconds = elapsed) }
             }
         }
