@@ -35,24 +35,24 @@ class MicrophoneDistractionMonitor @Inject constructor(
     private var monitorScope: CoroutineScope? = null
 
     override fun start() {
-        // If recorder setup fails (e.g. RECORD_AUDIO permission denied), the monitor simply
-        // produces no events rather than crashing.
-        try {
-            recorder = createRecorder().also {
-                it.prepare()
-                it.start()
-            }
-        } catch (e: Exception) {
-            recorder?.release()
-            recorder = null
-            tempOutputFile.delete()
-            Log.e(TAG, "Failed to start microphone monitoring", e)
-            return
-        }
-
-        monitorScope?.cancel()
         monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         monitorScope?.launch {
+            val activeRecorder = try {
+                createRecorder().also {
+                    it.prepare()
+                    it.start()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start microphone monitoring", e)
+                recorder?.release()
+                recorder = null
+                tempOutputFile.delete()
+                return@launch
+            }
+            recorder = activeRecorder
+
+            Log.i(TAG, "Started microphone monitoring")
+
             while (isActive) {
                 delay(POLL_INTERVAL_MS)
                 val amplitude = recorder?.maxAmplitude ?: break
@@ -66,8 +66,6 @@ class MicrophoneDistractionMonitor @Inject constructor(
                 }
             }
         }
-
-        Log.i(TAG, "Started microphone monitoring")
     }
 
     override fun stop() {
