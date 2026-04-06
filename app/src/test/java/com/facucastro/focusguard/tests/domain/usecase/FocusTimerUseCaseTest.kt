@@ -34,7 +34,7 @@ class FocusTimerUseCaseTest {
             useCase(startTimeMillis = 0L).take(1).toList(results)
         }
         fakeTime.now = 1_000L
-        advanceTimeBy(600L) // past the 500ms poll delay
+        advanceTimeBy(1_101L) // past the 1000ms poll delay
 
         // THEN
         job.join()
@@ -54,7 +54,7 @@ class FocusTimerUseCaseTest {
             useCase(startTimeMillis = startTime).take(1).toList(results)
         }
         fakeTime.now = startTime + 3_000L
-        advanceTimeBy(600L)
+        advanceTimeBy(1_001L)
 
         // THEN
         job.join()
@@ -79,7 +79,7 @@ class FocusTimerUseCaseTest {
             }
             repeat(3) {
                 tick++
-                advanceTimeBy(1001L)
+                advanceTimeBy(1_001L)
             }
 
             // THEN
@@ -99,7 +99,7 @@ class FocusTimerUseCaseTest {
             val job = launch {
                 useCase(startTimeMillis = 0L).take(1).toList(results)
             }
-            advanceTimeBy(600L)
+            advanceTimeBy(1_001L)
 
             // THEN
             job.join()
