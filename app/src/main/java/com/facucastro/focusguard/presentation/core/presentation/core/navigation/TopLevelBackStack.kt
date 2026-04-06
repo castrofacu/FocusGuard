@@ -17,21 +17,19 @@ class TopLevelBackStack<T : Any>(startKey: T) {
 
     val backStack = mutableStateListOf(startKey)
 
-    private fun updateBackStack() =
+    private fun updateBackStack() {
         backStack.apply {
             clear()
-            addAll(topLevelStacks.flatMap { it.value })
+            addAll(topLevelStacks[topLevelKey] ?: mutableStateListOf())
         }
+    }
 
     fun switchTab(key: T) {
         if (topLevelStacks[key] == null) {
             topLevelStacks[key] = mutableStateListOf(key)
         } else {
-            topLevelStacks.apply {
-                remove(key)?.let {
-                    put(key, it)
-                }
-            }
+            val stack = topLevelStacks.remove(key)
+            stack?.let { topLevelStacks[key] = it }
         }
         topLevelKey = key
         updateBackStack()
@@ -43,9 +41,15 @@ class TopLevelBackStack<T : Any>(startKey: T) {
     }
 
     fun removeLast() {
-        val removedKey = topLevelStacks[topLevelKey]?.removeLastOrNull()
-        topLevelStacks.remove(removedKey)
-        topLevelKey = topLevelStacks.keys.last()
+        val currentTabStack = topLevelStacks[topLevelKey]
+        if (currentTabStack?.size!! > 1) {
+            currentTabStack.removeLastOrNull()
+        } else {
+            if (topLevelStacks.size > 1) {
+                topLevelStacks.remove(topLevelKey)
+                topLevelKey = topLevelStacks.keys.last()
+            }
+        }
         updateBackStack()
     }
 }
