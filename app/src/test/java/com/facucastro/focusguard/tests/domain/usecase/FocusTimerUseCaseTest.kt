@@ -73,7 +73,7 @@ class FocusTimerUseCaseTest {
             val useCase = FocusTimerUseCase(fakeTime)
             val results = mutableListOf<Int>()
 
-            // WHEN — advance time in 3 steps, each 500ms (the poll interval)
+            // WHEN — advance time in 3 steps, each 1000ms (the poll interval)
             val job = launch {
                 useCase(startTimeMillis = 0L).take(3).toList(results)
             }
