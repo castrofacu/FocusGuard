@@ -8,7 +8,9 @@ import com.facucastro.focusguard.domain.model.DistractionEvent
 import com.facucastro.focusguard.domain.sensor.DistractionMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -30,25 +32,32 @@ class MicrophoneDistractionMonitor @Inject constructor(
     override val events: SharedFlow<DistractionEvent> = _events
 
     private var recorder: MediaRecorder? = null
-    private var pollingJob: Job? = null
+    private var monitorScope: CoroutineScope? = null
 
-    override fun start(scope: CoroutineScope) {
-        // If recorder setup fails (e.g. RECORD_AUDIO permission denied), the monitor simply
-        // produces no events rather than crashing.
-        try {
-            recorder = createRecorder().also {
-                it.prepare()
-                it.start()
+    override fun start() {
+        monitorScope?.cancel()
+        monitorScope = null
+        recorder?.runCatching { stop(); release() }
+        recorder = null
+
+        monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        monitorScope?.launch {
+            val activeRecorder = try {
+                createRecorder().also {
+                    it.prepare()
+                    it.start()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start microphone monitoring", e)
+                recorder?.release()
+                recorder = null
+                tempOutputFile.delete()
+                return@launch
             }
-        } catch (e: Exception) {
-            recorder?.release()
-            recorder = null
-            tempOutputFile.delete()
-            Log.e(TAG, "Failed to start microphone monitoring", e)
-            return
-        }
+            recorder = activeRecorder
 
-        pollingJob = scope.launch {
+            Log.i(TAG, "Started microphone monitoring")
+
             while (isActive) {
                 delay(POLL_INTERVAL_MS)
                 val amplitude = recorder?.maxAmplitude ?: break
@@ -62,13 +71,11 @@ class MicrophoneDistractionMonitor @Inject constructor(
                 }
             }
         }
-
-        Log.i(TAG, "Started microphone monitoring")
     }
 
     override fun stop() {
-        pollingJob?.cancel()
-        pollingJob = null
+        monitorScope?.cancel()
+        monitorScope = null
         recorder?.runCatching {
             stop()
             release()

@@ -1,8 +1,6 @@
 name: Run unit tests
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -11,7 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  unit-tests:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:

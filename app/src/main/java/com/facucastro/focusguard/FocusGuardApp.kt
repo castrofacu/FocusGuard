@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.facucastro.focusguard.data.sync.SyncWorkScheduler
-import com.facucastro.focusguard.notification.FocusNotificationManager
+import com.facucastro.focusguard.data.notification.FocusNotificationManager
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
