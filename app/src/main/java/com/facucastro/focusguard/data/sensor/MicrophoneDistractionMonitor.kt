@@ -35,6 +35,11 @@ class MicrophoneDistractionMonitor @Inject constructor(
     private var monitorScope: CoroutineScope? = null
 
     override fun start() {
+        monitorScope?.cancel()
+        monitorScope = null
+        recorder?.runCatching { stop(); release() }
+        recorder = null
+
         monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         monitorScope?.launch {
             val activeRecorder = try {

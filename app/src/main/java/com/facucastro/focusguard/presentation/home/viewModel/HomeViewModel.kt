@@ -15,6 +15,7 @@ import com.facucastro.focusguard.presentation.home.contract.HomeIntent
 import com.facucastro.focusguard.presentation.home.contract.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -67,7 +68,9 @@ class HomeViewModel @Inject constructor(
             )
         }
 
-        startMonitorJob()
+        viewModelScope.launch {
+            startMonitorJob()
+        }
         startTimerJob(requireNotNull(sessionTimer))
     }
 
@@ -81,7 +84,9 @@ class HomeViewModel @Inject constructor(
         if (state.value.status != SessionStatus.Paused) return
         sessionTimer?.resume()
         setState { copy(status = SessionStatus.Running) }
-        startMonitorJob()
+        viewModelScope.launch {
+            startMonitorJob()
+        }
     }
 
     private fun onStopClicked() {
@@ -111,8 +116,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun startMonitorJob() {
-        monitorJob?.cancel()
+    private suspend fun startMonitorJob() {
+        monitorJob?.cancelAndJoin()
         monitorJob = viewModelScope.launch {
             observeDistractionsUseCase().collect { event ->
                 setState {
