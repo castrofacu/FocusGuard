@@ -1,18 +1,25 @@
 package com.facucastro.focusguard.di
 
-import com.facucastro.focusguard.data.sensor.CompositeDistractionMonitor
+import com.facucastro.focusguard.data.sensor.AccelerometerDistractionMonitor
+import com.facucastro.focusguard.data.sensor.MicrophoneDistractionMonitor
+import com.facucastro.focusguard.domain.sensor.CompositeDistractionMonitor
 import com.facucastro.focusguard.domain.sensor.DistractionMonitor
-import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SensorModule {
+object SensorModule {
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindDistractionMonitor(impl: CompositeDistractionMonitor): DistractionMonitor
+    fun provideDistractionMonitor(
+        accelerometerMonitor: AccelerometerDistractionMonitor,
+        microphoneMonitor: MicrophoneDistractionMonitor,
+    ): DistractionMonitor = CompositeDistractionMonitor(
+        monitors = listOf(accelerometerMonitor, microphoneMonitor),
+    )
 }
