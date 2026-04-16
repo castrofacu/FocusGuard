@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import com.facucastro.focusguard.data.notification.FocusNotificationManager
 
 internal class SessionNotificationController(
@@ -23,7 +25,15 @@ internal class SessionNotificationController(
             pauseIntent = buildPauseOrResumeIntent(isPaused),
             stopIntent = buildStopIntent(),
         )
-        service.startForeground(FocusNotificationManager.SESSION_NOTIFICATION_ID, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            service.startForeground(
+                FocusNotificationManager.SESSION_NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE,
+            )
+        } else {
+            service.startForeground(FocusNotificationManager.SESSION_NOTIFICATION_ID, notification)
+        }
     }
 
     fun update(elapsedSeconds: Int, isPaused: Boolean) {
