@@ -8,7 +8,7 @@ import android.util.Log
 import com.facucastro.focusguard.data.notification.FocusNotificationManager
 import com.facucastro.focusguard.domain.model.SessionStatus
 import com.facucastro.focusguard.domain.session.FocusSessionController
-import com.facucastro.focusguard.domain.model.FocusSessionState
+import com.facucastro.focusguard.domain.session.FocusSessionState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

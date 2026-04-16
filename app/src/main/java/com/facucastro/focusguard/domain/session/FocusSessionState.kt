@@ -1,4 +1,7 @@
-package com.facucastro.focusguard.domain.model
+package com.facucastro.focusguard.domain.session
+
+import com.facucastro.focusguard.domain.model.DistractionEvent
+import com.facucastro.focusguard.domain.model.SessionStatus
 
 data class FocusSessionState(
     val status: SessionStatus = SessionStatus.Idle,

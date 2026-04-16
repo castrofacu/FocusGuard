@@ -4,7 +4,7 @@ import android.util.Log
 import com.facucastro.focusguard.domain.model.FocusSession
 import com.facucastro.focusguard.domain.model.SessionStatus
 import com.facucastro.focusguard.domain.session.FocusSessionController
-import com.facucastro.focusguard.domain.model.FocusSessionState
+import com.facucastro.focusguard.domain.session.FocusSessionState
 import com.facucastro.focusguard.domain.timer.FocusSessionTimer
 import com.facucastro.focusguard.domain.timer.FocusSessionTimerFactory
 import com.facucastro.focusguard.domain.usecase.FocusTimerUseCase

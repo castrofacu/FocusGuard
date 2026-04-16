@@ -1,6 +1,5 @@
 package com.facucastro.focusguard.domain.session
 
-import com.facucastro.focusguard.domain.model.FocusSessionState
 import kotlinx.coroutines.flow.StateFlow
 
 interface FocusSessionController {
