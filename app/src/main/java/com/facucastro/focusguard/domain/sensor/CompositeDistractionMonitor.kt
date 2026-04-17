@@ -2,6 +2,7 @@ package com.facucastro.focusguard.domain.sensor
 
 import android.util.Log
 import com.facucastro.focusguard.domain.model.DistractionEvent
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,9 +16,10 @@ private const val TAG = "CompositeDistractionMonitor"
 
 class CompositeDistractionMonitor(
     private val monitors: List<DistractionMonitor>,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : DistractionMonitor {
 
-    private val _events = MutableSharedFlow<DistractionEvent>()
+    private val _events = MutableSharedFlow<DistractionEvent>(extraBufferCapacity = 64)
     override val events: SharedFlow<DistractionEvent> = _events
 
     private var mergeScope: CoroutineScope? = null
@@ -26,7 +28,7 @@ class CompositeDistractionMonitor(
         monitors.forEach { it.start() }
 
         mergeScope?.cancel()
-        mergeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        mergeScope = CoroutineScope(SupervisorJob() + dispatcher)
         mergeScope?.launch {
             merge(*monitors.map { it.events }.toTypedArray())
                 .collect { _events.emit(it) }
