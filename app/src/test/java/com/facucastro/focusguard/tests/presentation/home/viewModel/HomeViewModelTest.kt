@@ -92,7 +92,7 @@ class HomeViewModelTest {
             val job = launch { viewModel.effects.toList(effects) }
 
             // WHEN
-            viewModel.handleIntent(HomeIntent.PermissionsResult(isNotificationGranted = false, isMicrophoneGranted = true))
+            viewModel.handleIntent(HomeIntent.PermissionsResult(isNotificationGranted = false))
             runCurrent()
 
             // THEN
