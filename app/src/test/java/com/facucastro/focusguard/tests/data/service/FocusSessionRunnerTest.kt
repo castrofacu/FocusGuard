@@ -35,6 +35,11 @@ class FocusSessionRunnerTest {
         io.mockk.every { android.util.Log.e(any(), any(), any()) } returns 0
     }
 
+    @After
+    fun tearDown() {
+        io.mockk.unmockkStatic(android.util.Log::class)
+    }
+
     @Test
     fun `GIVEN new runner WHEN inspecting state THEN status is Idle`() = runTest {
         // GIVEN / WHEN

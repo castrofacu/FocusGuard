@@ -34,6 +34,11 @@ class CompositeDistractionMonitorTest {
         every { android.util.Log.d(any(), any()) } returns 0
     }
 
+    @After
+    fun tearDown() {
+        io.mockk.unmockkStatic(android.util.Log::class)
+    }
+
     private fun buildComposite(
         vararg monitors: FakeDistractionMonitor,
     ): CompositeDistractionMonitor = CompositeDistractionMonitor(monitors.toList(), testDispatcher)
