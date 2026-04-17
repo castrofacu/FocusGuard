@@ -41,6 +41,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 ## Features
 
 - **Focus Timer** — Start, pause, resume and stop timed focus sessions
+- **Background Session** — Sessions continue running when the user leaves the app via a `ForegroundService` (`FocusSessionService`). A persistent notification with inline Pause/Resume and Stop controls is shown while a session is active.
 - **Distraction Detection** — Real-time monitoring via accelerometer (movement > 2.5 m/s²) and microphone (noise ≥ 70 dB)
 - **Distraction Notifications** — Rate-limited system notifications (2 s debounce window) alerting the user without spamming
 - **Session History** — Grouped, annotated list of past sessions with per-session stats (duration, distraction count) and an at-a-glance summary header (total sessions, total focus minutes, avg distractions)
@@ -59,23 +60,24 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 │                            Presentation                              │
 │  LoginScreen (MVI)   │  HomeScreen (MVI)    │  HistoryScreen (MVI)   │
 │  LoginViewModel      │  HomeViewModel       │  HistoryViewModel      │
-└────────────────────────────┬─────────────────────────────────────────┘
-                             │ Use Cases
-┌────────────────────────────▼────────────────────────────┐
-│                          Domain                         │
-│  StartFocusSessionUseCase  │  StopFocusSessionUseCase   │
-│  FocusTimerUseCase         │  ObserveDistractionsUseCase│
-│  GetHistoryUseCase         │  Auth Use Cases (×4)       │
-│  FocusRepository (i/f)     │  DistractionMonitor (i/f)  │
-│  AuthRepository (i/f)      │  TimeProvider (i/f)        │
-│  DistractionNotifier (i/f) │                            │
-└────────────────────────────┬────────────────────────────┘
-                             │ Implementations
-┌────────────────────────────▼────────────────────────────┐
-│                          Data                           │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │ Use Cases / Service binding
+┌──────────────────────────────▼────────────────────────────┐
+│                            Domain                         │
+│  StartFocusSessionUseCase    │  StopFocusSessionUseCase   │
+│  FocusTimerUseCase           │  ObserveDistractionsUseCase│
+│  GetHistoryUseCase           │  Auth Use Cases (×4)       │
+│  FocusRepository (i/f)       │  DistractionMonitor (i/f)  │
+│  AuthRepository (i/f)        │  TimeProvider (i/f)        │
+│  CompositeDistractionMonitor │  DistractionNotifier (i/f) │
+└──────────────────────────────┬────────────────────────────┘
+                               │ Implementations
+┌──────────────────────────────▼──────────────────────────┐
+│                             Data                        │
 │  Room (SessionDao, AppDatabase)                         │
 │  Retrofit + OkHttp (FocusRetrofitApi)                   │
 │  WorkManager (SyncSessionsWorker)                       │
+│  FocusSessionService (ForegroundService)                │
 │  SensorManager (AccelerometerDistractionMonitor)        │
 │  MediaRecorder (MicrophoneDistractionMonitor)           │
 │  Firebase Auth (AuthRepositoryImpl)                     │
@@ -108,7 +110,7 @@ All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract
 | Async | Coroutines + Flow |
 | Local DB | Room |
 | Networking | Retrofit + OkHttp + Gson |
-| Background Work | WorkManager (`CoroutineWorker`, `@HiltWorker`) |
+| Background Work | WorkManager (`CoroutineWorker`, `@HiltWorker`), ForegroundService |
 | Authentication | Firebase Auth (Anonymous + Google Sign-In via CredentialManager) |
 | Crash Reporting | Firebase Crashlytics |
 | Sensors | SensorManager (Accelerometer), MediaRecorder (Microphone) |
@@ -176,8 +178,14 @@ Or open the project in Android Studio and run the `app` configuration on a devic
 **Offline-first sync**  
 Sessions are always written to Room first. A `WorkManager` `OneTimeWorkRequest` with `NetworkType.CONNECTED` constraint and exponential backoff is enqueued after every save, guaranteeing sync even if the device is offline at the time of the session.
 
-**Sensor lifecycle owned by `ObserveDistractionsUseCase`**
-`DistractionMonitor.start()` / `stop()` are called inside `ObserveDistractionsUseCase` using Flow's `onStart` / `onCompletion` operators. This keeps the ViewModel free of any direct sensor dependency — it only holds a reference to the use case. The ViewModel cancels the collecting job (and thus triggers `onCompletion → stop()`) when pausing or stopping the session. To prevent a race where the previous collector's `onCompletion` fires after the new collector's `onStart` (which would stop the newly started monitor), `startMonitorJob()` uses `cancelAndJoin()` to await full completion of the old job before starting the new one. A `ForegroundService` is the correct long-term solution for background monitoring (tracked in the roadmap).
+**Background session via ForegroundService**  
+`FocusSessionService` is a bound + started `ForegroundService` that owns the lifetime of a focus session. It survives the user navigating away from the app and is only destroyed when the session is explicitly stopped. `HomeViewModel` binds to it via `LocalBinder` and observes its `StateFlow<FocusSessionState>` to drive the UI. User actions (Start, Pause, Resume, Stop) are sent as `startService(intent)` calls with a typed action string. The service posts a persistent notification with inline Pause/Resume and Stop controls via `PendingIntent`; the notification text is updated on every timer tick.
+
+**Composite sensor monitor in the domain layer**  
+`CompositeDistractionMonitor` lives in `domain/sensor/` and accepts a `List<DistractionMonitor>` at construction time. The decision of *which* monitors to combine is business logic and belongs in the domain; the concrete infrastructure monitors (`AccelerometerDistractionMonitor`, `MicrophoneDistractionMonitor`) remain in `data/sensor/`. Adding a new sensor source only requires appending it to the list in `SensorModule` — no changes to the domain or ViewModel.
+
+**Sensor lifecycle owned by `ObserveDistractionsUseCase`**  
+`DistractionMonitor.start()` / `stop()` are called inside `ObserveDistractionsUseCase` using Flow's `onStart` / `onCompletion` operators. This keeps the service free of any direct sensor dependency — it only holds a reference to the use case. The service cancels the collecting job (and thus triggers `onCompletion → stop()`) when pausing or stopping the session. To prevent a race where the previous collector's `onCompletion` fires after the new collector's `onStart`, `startMonitorJob()` uses `cancelAndJoin()` to await full completion of the old job before starting the new one.
 
 **MVI for all screens via `BaseMviViewModel`**  
 All screens share a common `BaseMviViewModel<S, I, E>` base class that exposes `state: StateFlow<S>` and `effects: Flow<E>`. Screens dispatch user actions as typed intents to a single `handleIntent()` entry point, making state transitions explicit and testable. `HistoryViewModel` is a read-only variant that uses `Nothing` for its intent and effect types — screens without user interactions don't need `handleIntent()`.
@@ -189,12 +197,11 @@ Navigation uses `androidx.navigation3`, following the official "Common UI" recip
 When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts `linkWithCredential`. If the Google account already exists (`FirebaseAuthUserCollisionException`), it falls back to a direct `signInWithCredential`, preserving a seamless UX.
 
 **Composite sensor monitor**  
-`CompositeDistractionMonitor` merges the `SharedFlow`s from both `AccelerometerDistractionMonitor` and `MicrophoneDistractionMonitor` using `Flow.merge()`, exposing a single `DistractionMonitor` interface to the ViewModel.
+`CompositeDistractionMonitor` (domain layer) merges the `SharedFlow`s from all monitors in its `List<DistractionMonitor>` using `Flow.merge()`, exposing a single `DistractionMonitor` interface to the rest of the app. The list is configured in `SensorModule`.
 
 ---
 
 ## Roadmap
 
-- [ ] Migrate sensor collection to a bound `ForegroundService`
 - [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl`)
 - [ ] Pomodoro-style configurable intervals
