@@ -43,7 +43,11 @@ class FocusSessionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
+        if (intent == null) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        when (intent.action) {
             ACTION_START -> {
                 hasStarted = true
                 notificationController.startForeground()
@@ -51,9 +55,12 @@ class FocusSessionService : Service() {
             }
             ACTION_PAUSE -> controller.pause()
             ACTION_RESUME -> controller.resume()
-            ACTION_STOP -> controller.stop()
+            ACTION_STOP -> {
+                hasStarted = true
+                controller.stop()
+            }
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -67,8 +74,8 @@ class FocusSessionService : Service() {
 
         when (state.status) {
             SessionStatus.Running -> notificationController.update(state.elapsedSeconds, isPaused = false)
-            SessionStatus.Paused  -> notificationController.update(state.elapsedSeconds, isPaused = true)
-            SessionStatus.Idle    -> {
+            SessionStatus.Paused -> notificationController.update(state.elapsedSeconds, isPaused = true)
+            SessionStatus.Idle -> {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -76,10 +83,10 @@ class FocusSessionService : Service() {
     }
 
     companion object {
-        const val ACTION_START  = "com.facucastro.focusguard.ACTION_START"
-        const val ACTION_PAUSE  = "com.facucastro.focusguard.ACTION_PAUSE"
+        const val ACTION_START = "com.facucastro.focusguard.ACTION_START"
+        const val ACTION_PAUSE = "com.facucastro.focusguard.ACTION_PAUSE"
         const val ACTION_RESUME = "com.facucastro.focusguard.ACTION_RESUME"
-        const val ACTION_STOP   = "com.facucastro.focusguard.ACTION_STOP"
+        const val ACTION_STOP = "com.facucastro.focusguard.ACTION_STOP"
 
         fun startIntent(context: Context)  =
             Intent(context, FocusSessionService::class.java).apply { action = ACTION_START }
