@@ -1,8 +1,8 @@
-package com.facucastro.focusguard.data.sensor
+package com.facucastro.focusguard.domain.sensor
 
 import android.util.Log
 import com.facucastro.focusguard.domain.model.DistractionEvent
-import com.facucastro.focusguard.domain.sensor.DistractionMonitor
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -11,39 +11,34 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
 private const val TAG = "CompositeDistractionMonitor"
 
-@Singleton
-class CompositeDistractionMonitor @Inject constructor(
-    private val accelerometerMonitor: AccelerometerDistractionMonitor,
-    private val microphoneMonitor: MicrophoneDistractionMonitor
+class CompositeDistractionMonitor(
+    private val monitors: List<DistractionMonitor>,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : DistractionMonitor {
 
-    private val _events = MutableSharedFlow<DistractionEvent>()
+    private val _events = MutableSharedFlow<DistractionEvent>(extraBufferCapacity = 64)
     override val events: SharedFlow<DistractionEvent> = _events
 
     private var mergeScope: CoroutineScope? = null
 
     override fun start() {
-        accelerometerMonitor.start()
-        microphoneMonitor.start()
+        monitors.forEach { it.start() }
 
         mergeScope?.cancel()
-        mergeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        mergeScope = CoroutineScope(SupervisorJob() + dispatcher)
         mergeScope?.launch {
-            merge(accelerometerMonitor.events, microphoneMonitor.events)
+            merge(*monitors.map { it.events }.toTypedArray())
                 .collect { _events.emit(it) }
         }
 
-        Log.i(TAG, "Started composite monitoring")
+        Log.i(TAG, "Started composite monitoring (${monitors.size} monitors)")
     }
 
     override fun stop() {
-        accelerometerMonitor.stop()
-        microphoneMonitor.stop()
+        monitors.forEach { it.stop() }
         mergeScope?.cancel()
         mergeScope = null
         Log.i(TAG, "Stopped composite monitoring")

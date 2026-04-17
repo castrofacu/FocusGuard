@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.facucastro.focusguard.data.service.FocusSessionService
 import com.facucastro.focusguard.presentation.home.contract.HomeEffect
 import com.facucastro.focusguard.presentation.home.contract.HomeIntent
 import com.facucastro.focusguard.presentation.home.viewModel.HomeViewModel
@@ -22,6 +24,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -47,10 +50,16 @@ fun HomeScreen(
                     }.toTypedArray()
                     permissionLauncher.launch(permissionsToRequest)
                 }
-                HomeEffect.FailedToSaveSession ->
-                    snackbarHostState.showSnackbar("Failed to save session")
                 HomeEffect.NotificationsPermissionDenied ->
                     snackbarHostState.showSnackbar("Notifications permission denied")
+                HomeEffect.StartSessionService ->
+                    context.startForegroundService(FocusSessionService.startIntent(context))
+                HomeEffect.PauseSessionService ->
+                    context.startService(FocusSessionService.pauseIntent(context))
+                HomeEffect.ResumeSessionService ->
+                    context.startService(FocusSessionService.resumeIntent(context))
+                HomeEffect.StopSessionService ->
+                    context.startService(FocusSessionService.stopIntent(context))
             }
         }
     }

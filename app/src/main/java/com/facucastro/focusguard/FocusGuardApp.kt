@@ -22,7 +22,7 @@ class FocusGuardApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        notificationManager.createChannel()
+        notificationManager.createChannels()
         syncWorkScheduler.enqueueSync()
     }
 
