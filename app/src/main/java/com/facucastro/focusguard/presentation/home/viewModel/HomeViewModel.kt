@@ -27,7 +27,10 @@ class HomeViewModel @Inject constructor(
     override fun handleIntent(intent: HomeIntent) {
         when (intent) {
             HomeIntent.StartClicked -> onStartClicked()
-            is HomeIntent.PermissionsResult -> onPermissionsResult(intent.isNotificationGranted)
+            is HomeIntent.PermissionsResult -> onPermissionsResult(
+                intent.isNotificationGranted,
+                intent.isMicrophoneGranted,
+            )
             HomeIntent.PauseClicked -> onPauseClicked()
             HomeIntent.ResumeClicked -> onResumeClicked()
             HomeIntent.StopClicked -> onStopClicked()
@@ -39,8 +42,12 @@ class HomeViewModel @Inject constructor(
         launchEffect(HomeEffect.RequestPermissions)
     }
 
-    private fun onPermissionsResult(isNotificationGranted: Boolean) {
+    private fun onPermissionsResult(isNotificationGranted: Boolean, isMicrophoneGranted: Boolean) {
         if (state.value.status != SessionStatus.Idle) return
+        if (!isMicrophoneGranted) {
+            launchEffect(HomeEffect.MicrophonePermissionDenied)
+            return
+        }
         if (!isNotificationGranted) {
             launchEffect(HomeEffect.NotificationsPermissionDenied)
         }

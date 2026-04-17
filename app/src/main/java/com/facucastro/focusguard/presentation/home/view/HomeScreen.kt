@@ -35,7 +35,8 @@ fun HomeScreen(
             } else {
                 true
             }
-        viewModel.handleIntent(HomeIntent.PermissionsResult(isNotificationGranted))
+        val isMicrophoneGranted = permissions[Manifest.permission.RECORD_AUDIO] == true
+        viewModel.handleIntent(HomeIntent.PermissionsResult(isNotificationGranted, isMicrophoneGranted))
     }
 
     LaunchedEffect(viewModel) {
@@ -50,10 +51,10 @@ fun HomeScreen(
                     }.toTypedArray()
                     permissionLauncher.launch(permissionsToRequest)
                 }
-                HomeEffect.FailedToSaveSession ->
-                    snackbarHostState.showSnackbar("Failed to save session")
                 HomeEffect.NotificationsPermissionDenied ->
                     snackbarHostState.showSnackbar("Notifications permission denied")
+                HomeEffect.MicrophonePermissionDenied ->
+                    snackbarHostState.showSnackbar("Microphone permission is required to start a session")
                 HomeEffect.StartSessionService ->
                     context.startForegroundService(FocusSessionService.startIntent(context))
                 HomeEffect.PauseSessionService ->
