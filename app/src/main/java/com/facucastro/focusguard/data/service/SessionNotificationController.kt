@@ -17,7 +17,6 @@ internal class SessionNotificationController(
     private val systemNotificationManager =
         service.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-
     fun startForeground(elapsedSeconds: Int = 0, isPaused: Boolean = false) {
         val notification = notificationManager.buildSessionNotification(
             elapsedSeconds = elapsedSeconds,
@@ -25,11 +24,11 @@ internal class SessionNotificationController(
             pauseIntent = buildPauseOrResumeIntent(isPaused),
             stopIntent = buildStopIntent(),
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             service.startForeground(
                 FocusNotificationManager.SESSION_NOTIFICATION_ID,
                 notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
             )
         } else {
             service.startForeground(FocusNotificationManager.SESSION_NOTIFICATION_ID, notification)

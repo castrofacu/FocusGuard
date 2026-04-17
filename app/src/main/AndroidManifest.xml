@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name=".FocusGuardApp"
@@ -44,7 +44,11 @@
         <service
             android:name=".data.service.FocusSessionService"
             android:exported="false"
-            android:foregroundServiceType="microphone" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Focus session timer with optional accelerometer and microphone distraction monitoring" />
+        </service>
     </application>
 
 </manifest>
