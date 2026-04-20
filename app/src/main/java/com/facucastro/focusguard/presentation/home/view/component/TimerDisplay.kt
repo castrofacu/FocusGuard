@@ -10,9 +10,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun TimerDisplay(elapsedSeconds: Int) {
-    val minutes = elapsedSeconds / 60
-    val seconds = elapsedSeconds % 60
+fun TimerDisplay(elapsedSeconds: () -> Int) {
+    val totalSeconds = elapsedSeconds()
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
     Text(
         text = "%02d:%02d".format(minutes, seconds),
         style = MaterialTheme.typography.displayLarge.copy(

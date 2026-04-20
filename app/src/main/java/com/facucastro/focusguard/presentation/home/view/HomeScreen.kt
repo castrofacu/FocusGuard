@@ -65,7 +65,11 @@ fun HomeScreen(
     }
 
     HomeContent(
-        state = state,
+        status = state.status,
+        distractionCount = state.distractionCount,
+        shieldStrength = state.shieldStrength,
+        lastDistractionEvent = state.lastDistractionEvent,
+        elapsedSeconds = { state.elapsedSeconds },
         modifier = modifier,
         onStartClicked = { viewModel.handleIntent(HomeIntent.StartClicked) },
         onPauseClicked = { viewModel.handleIntent(HomeIntent.PauseClicked) },
