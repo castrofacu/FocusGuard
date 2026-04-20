@@ -14,14 +14,15 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.facucastro.focusguard.domain.model.DistractionEvent
 import com.facucastro.focusguard.domain.model.SessionStatus
-import com.facucastro.focusguard.presentation.home.contract.HomeState
 import com.facucastro.focusguard.presentation.home.view.component.DistractionEventCard
 import com.facucastro.focusguard.presentation.home.view.component.SessionControls
 import com.facucastro.focusguard.presentation.home.view.component.ShieldOrb
@@ -30,7 +31,11 @@ import com.facucastro.focusguard.presentation.home.view.component.TimerDisplay
 
 @Composable
 fun HomeContent(
-    state: HomeState,
+    status: SessionStatus,
+    distractionCount: Int,
+    shieldStrength: Int,
+    lastDistractionEvent: DistractionEvent?,
+    elapsedSeconds: State<Int>,
     modifier: Modifier = Modifier,
     onStartClicked: () -> Unit,
     onPauseClicked: () -> Unit,
@@ -45,16 +50,16 @@ fun HomeContent(
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         ShieldOrb(
-            isActive = state.status is SessionStatus.Running,
+            isActive = status is SessionStatus.Running,
         )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            TimerDisplay(elapsedSeconds = state.elapsedSeconds)
+            TimerDisplay(elapsedSeconds = elapsedSeconds)
             Text(
-                text = when (state.status) {
+                text = when (status) {
                     is SessionStatus.Idle -> "READY TO DEFEND"
                     is SessionStatus.Running -> "DEFENDING"
                     is SessionStatus.Paused -> "SHIELD PAUSED"
@@ -76,7 +81,7 @@ fun HomeContent(
                 icon = Icons.Filled.Bolt,
                 iconTint = MaterialTheme.colorScheme.error,
                 label = "Distractions",
-                value = state.distractionCount.toString(),
+                value = distractionCount.toString(),
                 subtitle = "Breaches today",
                 modifier = Modifier.weight(1f),
             )
@@ -84,18 +89,18 @@ fun HomeContent(
                 icon = Icons.Filled.Shield,
                 iconTint = MaterialTheme.colorScheme.secondary,
                 label = "Strength",
-                value = "${state.shieldStrength}%",
+                value = "${shieldStrength}%",
                 subtitle = "Fortified status",
                 modifier = Modifier.weight(1f),
             )
         }
 
-        state.lastDistractionEvent?.let {
+        lastDistractionEvent?.let {
             DistractionEventCard(event = it)
         } ?: Spacer(Modifier.height(0.dp))
 
         SessionControls(
-            status = state.status,
+            status = status,
             onStartClicked = onStartClicked,
             onPauseClicked = onPauseClicked,
             onResumeClicked = onResumeClicked,
