@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,15 +33,15 @@ import com.facucastro.focusguard.presentation.home.view.component.TimerDisplay
 fun HomeContent(
     status: SessionStatus,
     distractionCount: Int,
-    shieldStrength: Int,
     lastDistractionEvent: DistractionEvent?,
-    elapsedSeconds: () -> Int,
+    elapsedSeconds: State<Int>,
     modifier: Modifier = Modifier,
     onStartClicked: () -> Unit,
     onPauseClicked: () -> Unit,
     onResumeClicked: () -> Unit,
     onStopClicked: () -> Unit,
 ) {
+    val shieldStrength = (100 - distractionCount * 10).coerceAtLeast(0)
     Column(
         modifier = modifier
             .fillMaxSize()

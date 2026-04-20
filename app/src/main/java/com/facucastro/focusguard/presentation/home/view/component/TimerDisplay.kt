@@ -3,6 +3,7 @@ package com.facucastro.focusguard.presentation.home.view.component
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -10,8 +11,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun TimerDisplay(elapsedSeconds: () -> Int) {
-    val totalSeconds = elapsedSeconds()
+fun TimerDisplay(elapsedSeconds: State<Int>) {
+    val totalSeconds = elapsedSeconds.value
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     Text(

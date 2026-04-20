@@ -7,7 +7,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,7 +25,10 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(),
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val homeState = viewModel.state.collectAsStateWithLifecycle()
+    val elapsedSecondsState: State<Int> = remember {
+        derivedStateOf { homeState.value.elapsedSeconds }
+    }
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -65,11 +70,10 @@ fun HomeScreen(
     }
 
     HomeContent(
-        status = state.status,
-        distractionCount = state.distractionCount,
-        shieldStrength = state.shieldStrength,
-        lastDistractionEvent = state.lastDistractionEvent,
-        elapsedSeconds = { state.elapsedSeconds },
+        status = homeState.value.status,
+        distractionCount = homeState.value.distractionCount,
+        lastDistractionEvent = homeState.value.lastDistractionEvent,
+        elapsedSeconds = elapsedSecondsState,
         modifier = modifier,
         onStartClicked = { viewModel.handleIntent(HomeIntent.StartClicked) },
         onPauseClicked = { viewModel.handleIntent(HomeIntent.PauseClicked) },
