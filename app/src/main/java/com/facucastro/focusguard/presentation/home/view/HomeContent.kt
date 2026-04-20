@@ -33,6 +33,7 @@ import com.facucastro.focusguard.presentation.home.view.component.TimerDisplay
 fun HomeContent(
     status: SessionStatus,
     distractionCount: Int,
+    shieldStrength: Int,
     lastDistractionEvent: DistractionEvent?,
     elapsedSeconds: State<Int>,
     modifier: Modifier = Modifier,
@@ -41,7 +42,6 @@ fun HomeContent(
     onResumeClicked: () -> Unit,
     onStopClicked: () -> Unit,
 ) {
-    val shieldStrength = (100 - distractionCount * 10).coerceAtLeast(0)
     Column(
         modifier = modifier
             .fillMaxSize()

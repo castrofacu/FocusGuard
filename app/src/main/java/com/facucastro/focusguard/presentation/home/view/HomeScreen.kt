@@ -26,7 +26,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
 ) {
     val homeState = viewModel.state.collectAsStateWithLifecycle()
-    val elapsedSecondsState: State<Int> = remember {
+    val elapsedSecondsState: State<Int> = remember(homeState) {
         derivedStateOf { homeState.value.elapsedSeconds }
     }
     val context = LocalContext.current
@@ -72,6 +72,7 @@ fun HomeScreen(
     HomeContent(
         status = homeState.value.status,
         distractionCount = homeState.value.distractionCount,
+        shieldStrength = homeState.value.shieldStrength,
         lastDistractionEvent = homeState.value.lastDistractionEvent,
         elapsedSeconds = elapsedSecondsState,
         modifier = modifier,
