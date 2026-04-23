@@ -1,0 +1,86 @@
+{
+  "data": {
+    "getWeeklyRanking": [
+      {
+        "rank": 1,
+        "focusMinutesThisWeek": 342,
+        "isCurrentlyInSession": true,
+        "user": {
+          "id": "user-001",
+          "displayName": "Ana García",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 2,
+        "focusMinutesThisWeek": 285,
+        "isCurrentlyInSession": false,
+        "user": {
+          "id": "user-002",
+          "displayName": "Carlos López",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 3,
+        "focusMinutesThisWeek": 260,
+        "isCurrentlyInSession": true,
+        "user": {
+          "id": "user-003",
+          "displayName": "María Fernández",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 4,
+        "focusMinutesThisWeek": 198,
+        "isCurrentlyInSession": false,
+        "user": {
+          "id": "user-004",
+          "displayName": "Diego Martínez",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 5,
+        "focusMinutesThisWeek": 175,
+        "isCurrentlyInSession": false,
+        "user": {
+          "id": "user-005",
+          "displayName": "Sofía Rodríguez",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 6,
+        "focusMinutesThisWeek": 140,
+        "isCurrentlyInSession": false,
+        "user": {
+          "id": "user-006",
+          "displayName": "Matías Castro",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 7,
+        "focusMinutesThisWeek": 120,
+        "isCurrentlyInSession": true,
+        "user": {
+          "id": "user-007",
+          "displayName": "Valentina Torres",
+          "avatarUrl": null
+        }
+      },
+      {
+        "rank": 8,
+        "focusMinutesThisWeek": 95,
+        "isCurrentlyInSession": false,
+        "user": {
+          "id": "user-008",
+          "displayName": "Juan Herrera",
+          "avatarUrl": null
+        }
+      }
+    ]
+  }
+}
