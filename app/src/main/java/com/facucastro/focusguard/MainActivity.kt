@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,10 +29,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.facucastro.focusguard.presentation.core.presentation.core.navigation.AppRoute
-import com.facucastro.focusguard.presentation.core.presentation.core.navigation.MainTab
-import com.facucastro.focusguard.presentation.core.presentation.core.navigation.TopLevelBackStack
+import com.facucastro.focusguard.presentation.core.navigation.AppRoute
+import com.facucastro.focusguard.presentation.core.navigation.MainTab
+import com.facucastro.focusguard.presentation.core.navigation.TopLevelBackStack
 import com.facucastro.focusguard.presentation.core.theme.FocusGuardTheme
+import com.facucastro.focusguard.presentation.community.CommunityScreen
 import com.facucastro.focusguard.presentation.history.HistoryScreen
 import com.facucastro.focusguard.presentation.home.view.HomeScreen
 import com.facucastro.focusguard.presentation.login.view.LoginScreen
@@ -120,6 +122,13 @@ class MainActivity : ComponentActivity() {
                         label = { Text("STATISTICS") },
                         colors = itemColors,
                     )
+                    NavigationBarItem(
+                        selected = tabBackStack.topLevelKey == MainTab.Community,
+                        onClick = { tabBackStack.switchTab(MainTab.Community) },
+                        icon = { Icon(Icons.Filled.Groups, contentDescription = "Community") },
+                        label = { Text("COMMUNITY") },
+                        colors = itemColors,
+                    )
                 }
             },
         ) { innerPadding ->
@@ -135,6 +144,12 @@ class MainActivity : ComponentActivity() {
                     }
                     entry<MainTab.History> {
                         HistoryScreen(modifier = Modifier.padding(innerPadding))
+                    }
+                    entry<MainTab.Community> {
+                        CommunityScreen(
+                            snackbarHostState = snackbarHostState,
+                            modifier = Modifier.padding(innerPadding),
+                        )
                     }
                 },
             )
