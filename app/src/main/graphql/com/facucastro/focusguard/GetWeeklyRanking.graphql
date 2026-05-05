@@ -1,0 +1,12 @@
+query GetWeeklyRanking {
+    getWeeklyRanking {
+        rank
+        focusMinutesThisWeek
+        isCurrentlyInSession
+        user {
+            id
+            displayName
+            avatarUrl
+        }
+    }
+}

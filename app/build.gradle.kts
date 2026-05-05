@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.apollo)
 }
 
 val localProperties = Properties().apply {
@@ -40,10 +41,12 @@ android {
             dimension = "env"
             versionNameSuffix = "-dev"
             buildConfigField("String", "BASE_URL", "\"https://dev-api.focusguard.example.com/\"")
+            buildConfigField("String", "GRAPHQL_URL", "\"\"") // Unused in dev; GraphQLModule uses MockServer directly
         }
         create("prod") {
             dimension = "env"
             buildConfigField("String", "BASE_URL", "\"https://api.focusguard.example.com/\"")
+            buildConfigField("String", "GRAPHQL_URL", "\"https://api.focusguard.example.com/graphql\"")
         }
     }
 
@@ -63,6 +66,15 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+apollo {
+    service("focusguard") {
+        packageName.set("com.facucastro.focusguard.graphql")
+        outputDirConnection {
+            connectToAndroidVariants(kotlin = true)
+        }
     }
 }
 
@@ -109,6 +121,9 @@ dependencies {
     implementation(libs.navigation3.runtime)
     implementation(libs.navigation3.ui)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.apollo.runtime)
+    "devImplementation"(libs.apollo.mockserver)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

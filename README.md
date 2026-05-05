@@ -45,6 +45,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 - **Distraction Detection** — Real-time monitoring via accelerometer (movement > 2.5 m/s²) and microphone (noise ≥ 70 dB)
 - **Distraction Notifications** — Rate-limited system notifications (2 s debounce window) alerting the user without spamming
 - **Session History** — Grouped, annotated list of past sessions with per-session stats (duration, distraction count) and an at-a-glance summary header (total sessions, total focus minutes, avg distractions)
+- **Community Leaderboard** — Weekly ranking of users by focus minutes, with a live session indicator. Backed by a GraphQL API via Apollo Kotlin 5; dev builds use an in-process `MockServer` with a bundled JSON fixture.
 - **Offline-First Sync** — Sessions saved to Room immediately; background WorkManager job syncs to remote API whenever connectivity is available
 - **Firebase Authentication** — Anonymous sign-in out of the box; optional upgrade to a full Google account with account-linking support
 - **MVI Pattern** — All screens use **MVI** via a shared `BaseMviViewModel<S, I, E>`: `LoginViewModel` and `HomeViewModel` expose `handleIntent()`; `HistoryViewModel` is a read-only variant with no intents or effects
@@ -56,11 +57,13 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 FocusGuard follows **Clean Architecture** with a strict three-layer separation and **Hilt** for dependency injection.
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                            Presentation                              │
-│  LoginScreen (MVI)   │  HomeScreen (MVI)    │  HistoryScreen (MVI)   │
-│  LoginViewModel      │  HomeViewModel       │  HistoryViewModel      │
-└──────────────────────────────┬───────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│                            Presentation                               │
+│  LoginScreen (MVI)   │  HomeScreen (MVI)       │  HistoryScreen (MVI) │
+│  LoginViewModel      │  HomeViewModel          │  HistoryViewModel    │
+│                      │  CommunityScreen (MVI)  │                      │
+│                      │  CommunityViewModel     │                      │
+└──────────────────────────────┬────────────────────────────────────────┘
                                │ Use Cases / Service binding
 ┌──────────────────────────────▼────────────────────────────┐
 │                            Domain                         │
@@ -69,13 +72,15 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 │  GetHistoryUseCase           │  Auth Use Cases (×4)       │
 │  FocusRepository (i/f)       │  DistractionMonitor (i/f)  │
 │  AuthRepository (i/f)        │  TimeProvider (i/f)        │
-│  CompositeDistractionMonitor │  DistractionNotifier (i/f) │
+│  CommunityRepository (i/f)   │  DistractionNotifier (i/f) │
+│  CompositeDistractionMonitor │                            │
 └──────────────────────────────┬────────────────────────────┘
                                │ Implementations
 ┌──────────────────────────────▼──────────────────────────┐
 │                             Data                        │
 │  Room (SessionDao, AppDatabase)                         │
 │  Retrofit + OkHttp (FocusRetrofitApi)                   │
+│  Apollo Kotlin 5 (CommunityRepositoryImpl)              │
 │  WorkManager (SyncSessionsWorker)                       │
 │  FocusSessionService (ForegroundService)                │
 │  SensorManager (AccelerometerDistractionMonitor)        │
@@ -93,6 +98,7 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 | Login | **MVI** | `StateFlow<LoginState>` | `Flow<LoginEffect>` via `BaseMviViewModel` |
 | Home | **MVI** | `StateFlow<HomeState>` | `Flow<HomeEffect>` via `BaseMviViewModel` |
 | History | **MVI** (read-only) | `StateFlow<HistoryState>` (`stateIn`) | — |
+| Community | **MVI** | `StateFlow<CommunityState>` | `Flow<CommunityEffect>` via `BaseMviViewModel` |
 
 All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract/` sub-package with one file per type (`*State.kt`, `*Intent.kt`, `*Effect.kt`). `HistoryViewModel` uses `Nothing` for `I` and `E` since History has no user-initiated intents or side effects.
 
@@ -109,7 +115,7 @@ All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract
 | DI | Hilt |
 | Async | Coroutines + Flow |
 | Local DB | Room |
-| Networking | Retrofit + OkHttp + Gson |
+| Networking | Retrofit + OkHttp + Gson (REST), Apollo Kotlin 5 (GraphQL) |
 | Background Work | WorkManager (`CoroutineWorker`, `@HiltWorker`), ForegroundService |
 | Authentication | Firebase Auth (Anonymous + Google Sign-In via CredentialManager) |
 | Crash Reporting | Firebase Crashlytics |
@@ -152,19 +158,23 @@ cd FocusGuard
 ### 4. Build & run
 
 ```bash
-./gradlew assembleDebug
+./gradlew assembleDevDebug   # dev flavor (MockServer for GraphQL)
+./gradlew assembleProdDebug  # prod flavor (real backend)
 ```
 
 Or open the project in Android Studio and run the `app` configuration on a device or emulator (API 26+).
 
-> **Note:** The app currently uses `FakeFocusApiServiceImpl` for remote API calls. No real backend is required to run the app.
+> **Note:** The app currently uses `FakeFocusApiServiceImpl` for REST API calls and an in-process Apollo `MockServer` (dev flavor) for GraphQL. No real backend is required to run the app.
 
 ---
 
 ## Running Tests
 
 ```bash
-# Unit tests
+# Unit tests (dev flavor)
+./gradlew testDevDebugUnitTest
+
+# Unit tests (all variants)
 ./gradlew test
 
 # Instrumented (UI) tests — requires connected device or emulator
@@ -174,6 +184,9 @@ Or open the project in Android Studio and run the `app` configuration on a devic
 ---
 
 ## Key Design Decisions
+
+**GraphQL via Apollo Kotlin 5 with per-flavor clients**  
+The Community Leaderboard fetches data via GraphQL using Apollo Kotlin 5 (`com.apollographql.apollo`). Each build flavor provides its own `ApolloClient` via a `GraphQLModule` in its flavor source set. The `dev` flavor uses Apollo `MockServer` with a bundled JSON fixture (`src/dev/assets/mock_weekly_ranking.json`) and a custom `MockServerHandler` that serves the response indefinitely — no request-count limit. The `prod` flavor points to `BuildConfig.GRAPHQL_URL`. Apollo-generated types never leave the `data/` layer; the domain only sees `CommunityRanking` / `LeaderboardUser` (plain Kotlin data classes mapped by extension functions in `CommunityRankingMapper.kt`).
 
 **Offline-first sync**  
 Sessions are always written to Room first. A `WorkManager` `OneTimeWorkRequest` with `NetworkType.CONNECTED` constraint and exponential backoff is enqueued after every save, guaranteeing sync even if the device is offline at the time of the session.
@@ -203,5 +216,5 @@ When an anonymous user signs in with Google, `AuthRepositoryImpl` first attempts
 
 ## Roadmap
 
-- [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl`)
+- [ ] Implement real backend integration (replace `FakeFocusApiServiceImpl` for REST; wire prod GraphQL URL)
 - [ ] Pomodoro-style configurable intervals
