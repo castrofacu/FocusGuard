@@ -37,6 +37,7 @@ import com.facucastro.focusguard.presentation.community.CommunityScreen
 import com.facucastro.focusguard.presentation.history.HistoryScreen
 import com.facucastro.focusguard.presentation.home.view.HomeScreen
 import com.facucastro.focusguard.presentation.login.view.LoginScreen
+import com.facucastro.focusguard.presentation.main.viewModel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -49,13 +50,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FocusGuardTheme {
-                val isUserLoggedIn by mainViewModel.isUserLoggedIn
-                    .collectAsStateWithLifecycle(initialValue = false)
+                val state by mainViewModel.state.collectAsStateWithLifecycle()
 
                 val backStack = rememberNavBackStack(AppRoute.Login)
 
-                LaunchedEffect(isUserLoggedIn) {
-                    if (isUserLoggedIn) {
+                LaunchedEffect(state.isUserLoggedIn) {
+                    if (state.isUserLoggedIn) {
                         if (backStack.contains(AppRoute.Login)) {
                             backStack.clear()
                             backStack.add(AppRoute.Main)
@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         entry<AppRoute.Main> {
-                            MainContent()
+                            MainContent(isLeaderboardEnabled = state.isLeaderboardEnabled)
                         }
                     },
                 )
@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun MainContent() {
+    private fun MainContent(isLeaderboardEnabled: Boolean) {
         val snackbarHostState = remember { SnackbarHostState() }
         val tabBackStack = remember { TopLevelBackStack<MainTab>(MainTab.Home) }
 
@@ -122,13 +122,15 @@ class MainActivity : ComponentActivity() {
                         label = { Text("STATISTICS") },
                         colors = itemColors,
                     )
-                    NavigationBarItem(
-                        selected = tabBackStack.topLevelKey == MainTab.Community,
-                        onClick = { tabBackStack.switchTab(MainTab.Community) },
-                        icon = { Icon(Icons.Filled.Groups, contentDescription = "Community") },
-                        label = { Text("COMMUNITY") },
-                        colors = itemColors,
-                    )
+                    if (isLeaderboardEnabled) {
+                        NavigationBarItem(
+                            selected = tabBackStack.topLevelKey == MainTab.Community,
+                            onClick = { tabBackStack.switchTab(MainTab.Community) },
+                            icon = { Icon(Icons.Filled.Groups, contentDescription = "Community") },
+                            label = { Text("COMMUNITY") },
+                            colors = itemColors,
+                        )
+                    }
                 }
             },
         ) { innerPadding ->
@@ -145,11 +147,13 @@ class MainActivity : ComponentActivity() {
                     entry<MainTab.History> {
                         HistoryScreen(modifier = Modifier.padding(innerPadding))
                     }
-                    entry<MainTab.Community> {
-                        CommunityScreen(
-                            snackbarHostState = snackbarHostState,
-                            modifier = Modifier.padding(innerPadding),
-                        )
+                    if (isLeaderboardEnabled) {
+                        entry<MainTab.Community> {
+                            CommunityScreen(
+                                snackbarHostState = snackbarHostState,
+                                modifier = Modifier.padding(innerPadding),
+                            )
+                        }
                     }
                 },
             )
