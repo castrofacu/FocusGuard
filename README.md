@@ -48,7 +48,7 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 - **Community Leaderboard** — Weekly ranking of users by focus minutes, with a live session indicator. Backed by a GraphQL API via Apollo Kotlin 5; dev builds use an in-process `MockServer` with a bundled JSON fixture.
 - **Offline-First Sync** — Sessions saved to Room immediately; background WorkManager job syncs to remote API whenever connectivity is available
 - **Firebase Authentication** — Anonymous sign-in out of the box; optional upgrade to a full Google account with account-linking support
-- **MVI Pattern** — All screens use **MVI** via a shared `BaseMviViewModel<S, I, E>`: `LoginViewModel` and `HomeViewModel` expose `handleIntent()`; `HistoryViewModel` is a read-only variant with no intents or effects
+- **MVI Pattern** — All screens use **MVI** via a shared `BaseMviViewModel<S, I, E>`: `LoginViewModel` and `HomeViewModel` expose `handleIntent()`; `HistoryViewModel` and `MainViewModel` are read-only variants with no intents or effects, driven purely by reactive flows
 
 ---
 
@@ -57,13 +57,13 @@ FocusGuard is an Android app — part personal productivity tool, part Android d
 FocusGuard follows **Clean Architecture** with a strict three-layer separation and **Hilt** for dependency injection.
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                            Presentation                               │
-│  LoginScreen (MVI)   │  HomeScreen (MVI)       │  HistoryScreen (MVI) │
-│  LoginViewModel      │  HomeViewModel          │  HistoryViewModel    │
-│                      │  CommunityScreen (MVI)  │                      │
-│                      │  CommunityViewModel     │                      │
-└──────────────────────────────┬────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                            Presentation                     │
+│  LoginScreen     │  HomeScreen          │  HistoryScreen    │
+│  LoginViewModel  │  HomeViewModel       │  HistoryViewModel │
+│                  │  CommunityScreen     │  MainViewModel    │
+│                  │  CommunityViewModel  │                   │
+└──────────────────────────────┬──────────────────────────────┘
                                │ Use Cases / Service binding
 ┌──────────────────────────────▼────────────────────────────┐
 │                            Domain                         │
@@ -88,6 +88,7 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 │  Firebase Auth (AuthRepositoryImpl)                     │
 │  CredentialManager (GoogleCredentialDataSource)         │
 │  FocusNotificationManager (→ DistractionNotifier)       │
+│  FirebaseRemoteConfig (→ FeatureFlagService)            │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -99,8 +100,9 @@ FocusGuard follows **Clean Architecture** with a strict three-layer separation a
 | Home | **MVI** | `StateFlow<HomeState>` | `Flow<HomeEffect>` via `BaseMviViewModel` |
 | History | **MVI** (read-only) | `StateFlow<HistoryState>` (`stateIn`) | — |
 | Community | **MVI** | `StateFlow<CommunityState>` | `Flow<CommunityEffect>` via `BaseMviViewModel` |
+| Main (auth gate) | **MVI** (read-only) | `StateFlow<MainState>` | — |
 
-All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract/` sub-package with one file per type (`*State.kt`, `*Intent.kt`, `*Effect.kt`). `HistoryViewModel` uses `Nothing` for `I` and `E` since History has no user-initiated intents or side effects.
+All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract/` sub-package with one file per type (`*State.kt`, `*Intent.kt`, `*Effect.kt`). `HistoryViewModel` and `MainViewModel` use `Nothing` for `I` and `E` — they are purely reactive with no user-initiated intents or side effects. `MainState` holds `isUserLoggedIn` and `isLeaderboardEnabled` (from Firebase Remote Config flag `feature_leaderboard_enabled`), driving both auth-gate navigation and conditional Community tab rendering.
 
 ---
 
@@ -118,6 +120,7 @@ All ViewModels extend `BaseMviViewModel<S, I, E>`. Contracts live in a `contract
 | Networking | Retrofit + OkHttp + Gson (REST), Apollo Kotlin 5 (GraphQL) |
 | Background Work | WorkManager (`CoroutineWorker`, `@HiltWorker`), ForegroundService |
 | Authentication | Firebase Auth (Anonymous + Google Sign-In via CredentialManager) |
+| Feature Flags | Firebase Remote Config |
 | Crash Reporting | Firebase Crashlytics |
 | Sensors | SensorManager (Accelerometer), MediaRecorder (Microphone) |
 | Notifications | NotificationManager + NotificationChannel |
@@ -184,6 +187,9 @@ Or open the project in Android Studio and run the `app` configuration on a devic
 ---
 
 ## Key Design Decisions
+
+**Feature flags via Firebase Remote Config**
+The `feature_leaderboard_enabled` Remote Config flag gates the Community Leaderboard tab. The domain stays clean via a `FeatureFlagService` interface (`domain/feature/`); the data-layer implementation (`RemoteConfigFeatureFlagService`) calls `fetchAndActivate()` and defaults to `false` on any failure. `MainViewModel` fetches the flag on `init` and stores the result in `MainState.isLeaderboardEnabled`. `MainActivity` reads this from the single `state` object to conditionally render the Community `NavigationBarItem` and `entry<MainTab.Community>`. Adding a new flag only requires a new constant in `FeatureFlags` and a call to `featureFlagService.isEnabled()`.
 
 **GraphQL via Apollo Kotlin 5 with per-flavor clients**  
 The Community Leaderboard fetches data via GraphQL using Apollo Kotlin 5 (`com.apollographql.apollo`). Each build flavor provides its own `ApolloClient` via a `GraphQLModule` in its flavor source set. The `dev` flavor uses Apollo `MockServer` with a bundled JSON fixture (`src/dev/assets/mock_weekly_ranking.json`) and a custom `MockServerHandler` that serves the response indefinitely — no request-count limit. The `prod` flavor points to `BuildConfig.GRAPHQL_URL`. Apollo-generated types never leave the `data/` layer; the domain only sees `CommunityRanking` / `LeaderboardUser` (plain Kotlin data classes mapped by extension functions in `CommunityRankingMapper.kt`).
