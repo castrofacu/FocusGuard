@@ -41,7 +41,7 @@ android {
             dimension = "env"
             versionNameSuffix = "-dev"
             buildConfigField("String", "BASE_URL", "\"https://dev-api.focusguard.example.com/\"")
-            buildConfigField("String", "GRAPHQL_URL", "\"\"") // Overridden at runtime by MockServer
+            buildConfigField("String", "GRAPHQL_URL", "\"\"") // Unused in dev; GraphQLModule uses MockServer directly
         }
         create("prod") {
             dimension = "env"
