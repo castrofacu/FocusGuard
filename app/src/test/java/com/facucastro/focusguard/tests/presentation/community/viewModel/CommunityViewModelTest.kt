@@ -2,7 +2,9 @@ package com.facucastro.focusguard.tests.presentation.community.viewModel
 
 import com.facucastro.focusguard.presentation.community.contract.CommunityEffect
 import com.facucastro.focusguard.presentation.community.contract.CommunityIntent
+import com.facucastro.focusguard.presentation.community.viewModel.CommunityViewModel
 import com.facucastro.focusguard.providers.domain.repository.fakeCommunityRankings
+import com.facucastro.focusguard.providers.domain.repository.providesFakeCommunityRepository
 import com.facucastro.focusguard.providers.presentation.community.viewModel.providesCommunityViewModel
 import com.facucastro.focusguard.utils.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -11,7 +13,6 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -79,10 +80,10 @@ class CommunityViewModelTest {
     @Test
     fun `GIVEN error state WHEN RetryClicked THEN rankings are loaded on success`() = runTest {
         // GIVEN
-        val fakeRepo = com.facucastro.focusguard.providers.domain.repository.providesFakeCommunityRepository(
+        val fakeRepo = providesFakeCommunityRepository(
             rankingResult = Result.failure(Exception("error")),
         )
-        val viewModel = com.facucastro.focusguard.presentation.community.viewModel.CommunityViewModel(fakeRepo)
+        val viewModel = CommunityViewModel(fakeRepo)
         runCurrent()
 
         // WHEN
@@ -100,14 +101,17 @@ class CommunityViewModelTest {
     @Test
     fun `GIVEN loading in progress WHEN LoadRanking sent again THEN second call is ignored`() = runTest {
         // GIVEN
-        val viewModel = providesCommunityViewModel()
+        val fakeRepo = providesFakeCommunityRepository()
+        val viewModel = CommunityViewModel(fakeRepo)
 
         // WHEN
         viewModel.handleIntent(CommunityIntent.LoadRanking)
 
-        // THEN
         runCurrent()
-        assertNotNull(viewModel.state.value.rankings)
+
+        // THEN
+        assertEquals(1, fakeRepo.callCount)
         assertFalse(viewModel.state.value.isLoading)
+        assertEquals(fakeCommunityRankings, viewModel.state.value.rankings)
     }
 }

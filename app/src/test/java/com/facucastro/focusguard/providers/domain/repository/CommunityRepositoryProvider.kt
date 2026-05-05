@@ -7,7 +7,13 @@ import com.facucastro.focusguard.domain.repository.CommunityRepository
 class FakeCommunityRepository(
     var rankingResult: Result<List<CommunityRanking>> = Result.success(fakeCommunityRankings),
 ) : CommunityRepository {
-    override suspend fun getWeeklyRanking(): Result<List<CommunityRanking>> = rankingResult
+    var callCount: Int = 0
+        private set
+
+    override suspend fun getWeeklyRanking(): Result<List<CommunityRanking>> {
+        callCount++
+        return rankingResult
+    }
 }
 
 val fakeCommunityRankings: List<CommunityRanking> = listOf(
