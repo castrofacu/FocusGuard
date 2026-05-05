@@ -81,7 +81,7 @@ fun LeaderboardEntryCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = entry.user.displayName.first().uppercaseChar().toString(),
+                    text = entry.user.displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold,
