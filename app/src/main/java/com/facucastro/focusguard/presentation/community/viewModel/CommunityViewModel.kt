@@ -29,9 +29,9 @@ class CommunityViewModel @Inject constructor(
     private fun loadRanking() {
         if (state.value.isLoading) return
 
-        viewModelScope.launch {
-            setState { copy(isLoading = true, errorMessage = null, rankings = emptyList()) }
+        setState { copy(isLoading = true, errorMessage = null, rankings = emptyList()) }
 
+        viewModelScope.launch {
             communityRepository.getWeeklyRanking()
                 .onSuccess { rankings ->
                     setState { copy(isLoading = false, rankings = rankings) }
