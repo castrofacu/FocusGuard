@@ -3,8 +3,10 @@ package com.facucastro.focusguard.di
 import android.content.Context
 import android.util.Log
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.mockserver.MockRequestBase
 import com.apollographql.mockserver.MockResponse
 import com.apollographql.mockserver.MockServer
+import com.apollographql.mockserver.MockServerHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,17 +32,17 @@ object GraphQLModule {
             .bufferedReader()
             .use { it.readText() }
 
-        val server = MockServer()
+        val handler = object : MockServerHandler {
+            private val response = MockResponse.Builder()
+                .statusCode(200)
+                .addHeader("Content-Type", "application/json")
+                .body(mockJson)
+                .build()
 
-        repeat(100) {
-            server.enqueue(
-                MockResponse.Builder()
-                    .statusCode(200)
-                    .addHeader("Content-Type", "application/json")
-                    .body(mockJson)
-                    .build()
-            )
+            override fun handle(request: MockRequestBase): MockResponse = response
         }
+
+        val server = MockServer.Builder().handler(handler).build()
 
         val serverUrl = runBlocking(Dispatchers.IO) { server.url() }
         Log.d(TAG, "MockServer ready at $serverUrl")
