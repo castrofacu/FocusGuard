@@ -1,5 +1,6 @@
 package com.facucastro.focusguard.di
 
+import com.facucastro.focusguard.BuildConfig
 import com.facucastro.focusguard.data.feature.RemoteConfigFeatureFlagService
 import com.facucastro.focusguard.domain.feature.FeatureFlagService
 import com.facucastro.focusguard.domain.feature.FeatureFlags
@@ -27,10 +28,11 @@ abstract class FeatureFlagModule {
         @Provides
         @Singleton
         fun provideFirebaseRemoteConfig(): FirebaseRemoteConfig {
+            val fetchIntervalSeconds = if (BuildConfig.DEBUG) 0L else 3600L
             return FirebaseRemoteConfig.getInstance().apply {
                 setConfigSettingsAsync(
                     remoteConfigSettings {
-                        minimumFetchIntervalInSeconds = 3600
+                        minimumFetchIntervalInSeconds = fetchIntervalSeconds
                     }
                 )
                 setDefaultsAsync(
