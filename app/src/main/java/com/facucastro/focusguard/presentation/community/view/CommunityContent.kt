@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.facucastro.focusguard.domain.model.CommunityRanking
 import com.facucastro.focusguard.presentation.community.contract.CommunityIntent
 import com.facucastro.focusguard.presentation.community.contract.CommunityState
+import com.facucastro.focusguard.presentation.core.component.FocusGuardButton
 import com.facucastro.focusguard.presentation.community.view.component.LeaderboardEntryCard
 import com.facucastro.focusguard.presentation.core.component.LoadingComponent
 
@@ -138,9 +138,7 @@ private fun ErrorContent(
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Retry")
-            }
+            FocusGuardButton(text = "Retry", onClick = onRetry, modifier = Modifier.fillMaxWidth())
         }
     }
 }
